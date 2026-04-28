@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socios - Dulce</title>
     <link rel="stylesheet" href="CSS/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body id="page-socios">
 <header>
@@ -44,7 +45,14 @@
             Cargá productos con nombre, descripción, precio e imagen. Luego generá el archivo
             <strong>productos.json</strong> y reemplazalo en <strong>data/productos.json</strong>.
         </p>
+        <h2>Cargar catálogo desde Excel</h2>
 
+        <input type="file" id="excel-file" accept=".xlsx, .xls">
+
+        <button id="upload-excel-btn" class="btn btn-primary">
+            Cargar Excel y generar catálogo
+        </button>
+        
         <form id="product-form" class="admin-form">
             <input id="admin-nombre" placeholder="Nombre del producto" required>
             <textarea id="admin-descripcion" placeholder="Descripción" required></textarea>
