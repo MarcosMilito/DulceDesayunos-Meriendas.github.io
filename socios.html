@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socios - Dulce</title>
+    <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body id="page-socios">
+<header>
+    <div class="container nav-container">
+        <a href="index.html" class="logo">Dulce</a>
+        <nav class="desktop-nav">
+            <a href="index.html">Inicio</a>
+            <a href="lista-precios.html">Lista de Precios</a>
+            <a href="pedidos.html">Pedidos</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="socios.html" class="active">Socios</a>
+        </nav>
+        <button class="hamburger-menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav">
+        <a href="index.html">Inicio</a>
+        <a href="lista-precios.html">Lista de Precios</a>
+        <a href="pedidos.html">Pedidos</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="socios.html">Socios</a>
+    </nav>
+</header>
+
+<main class="container page-content">
+    <section id="login-section" class="admin-card">
+        <h1>Acceso socios</h1>
+        <p>Ingresá el código para actualizar el catálogo.</p>
+        <form id="login-form">
+            <input type="password" id="codigo-acceso" placeholder="Código de acceso" required>
+            <button class="btn btn-primary" type="submit">Ingresar</button>
+        </form>
+    </section>
+
+    <section id="admin-panel" class="admin-card" style="display:none;">
+        <h1>Actualizar catálogo</h1>
+        <p>
+            Cargá productos con nombre, descripción, precio e imagen. Luego generá el archivo
+            <strong>productos.json</strong> y reemplazalo en <strong>data/productos.json</strong>.
+        </p>
+
+        <form id="product-form" class="admin-form">
+            <input id="admin-nombre" placeholder="Nombre del producto" required>
+            <textarea id="admin-descripcion" placeholder="Descripción" required></textarea>
+            <input id="admin-precio" type="number" min="0" step="0.01" placeholder="Precio" required>
+            <input id="admin-imagen" placeholder="URL o ruta de imagen, ejemplo: imagenes/desayuno1.jpg">
+            <button class="btn btn-primary" type="submit">Agregar producto</button>
+        </form>
+
+        <div class="admin-actions">
+            <button id="generate-json-btn" class="btn btn-primary">Generar productos.json</button>
+            <button id="clear-admin-products-btn" class="btn btn-secondary">Limpiar lista</button>
+        </div>
+
+        <div id="admin-preview" class="admin-preview"></div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 Dulce Desayunos y Meriendas</p>
+</footer>
+
+<script src="JS/script.js"></script>
+</body>
+</html>

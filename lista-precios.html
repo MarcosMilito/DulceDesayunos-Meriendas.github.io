@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Precios - Dulce</title>
+    <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body id="page-lista">
+<header>
+    <div class="container nav-container">
+        <a href="index.html" class="logo">Dulce</a>
+        <nav class="desktop-nav">
+            <a href="index.html">Inicio</a>
+            <a href="lista-precios.html" class="active">Lista de Precios</a>
+            <a href="pedidos.html">Pedidos</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="socios.html">Socios</a>
+        </nav>
+        <button class="hamburger-menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav">
+        <a href="index.html">Inicio</a>
+        <a href="lista-precios.html">Lista de Precios</a>
+        <a href="pedidos.html">Pedidos</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="socios.html">Socios</a>
+    </nav>
+</header>
+
+<main class="container page-content">
+    <section class="section-header">
+        <span class="kicker">Catálogo</span>
+        <h1>Lista de precios</h1>
+        <p>Conocé todos nuestros desayunos y meriendas disponibles.</p>
+    </section>
+
+    <section class="tools">
+        <input type="text" id="price-search" placeholder="Buscar por nombre o descripción...">
+        <span id="price-total">0 productos</span>
+    </section>
+
+    <div class="table-wrapper">
+        <table id="price-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 Dulce Desayunos y Meriendas</p>
+</footer>
+
+<script src="JS/script.js"></script>
+</body>
+</html>

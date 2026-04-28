@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Dulce</title>
+    <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body id="page-pedidos">
+<header>
+    <div class="container nav-container">
+        <a href="index.html" class="logo">Dulce</a>
+        <nav class="desktop-nav">
+            <a href="index.html">Inicio</a>
+            <a href="lista-precios.html">Lista de Precios</a>
+            <a href="pedidos.html" class="active">Pedidos</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="socios.html">Socios</a>
+        </nav>
+        <button id="cart-button" class="cart-button">🛒 <span id="cart-count">0</span></button>
+        <button class="hamburger-menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav">
+        <a href="index.html">Inicio</a>
+        <a href="lista-precios.html">Lista de Precios</a>
+        <a href="pedidos.html">Pedidos</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="socios.html">Socios</a>
+    </nav>
+</header>
+
+<main class="container page-content">
+    <section class="section-header">
+        <span class="kicker">Armá tu pedido</span>
+        <h1>Desayunos y meriendas</h1>
+        <p>Elegí tus productos, agregalos al carrito y completá los datos para coordinar la entrega.</p>
+    </section>
+
+    <section class="tools">
+        <input type="text" id="product-search" placeholder="Buscar producto...">
+        <span id="product-total">0 productos</span>
+    </section>
+
+    <section id="product-grid" class="product-grid"></section>
+</main>
+
+<div id="cart-modal" class="modal">
+    <div class="modal-content cart-modal-content">
+        <button class="close-button" id="close-cart-modal">&times;</button>
+        <h2>Tu carrito</h2>
+        <div id="cart-items"></div>
+        <div class="cart-summary">
+            <h3>Total: <span id="cart-total">$0,00</span></h3>
+            <button id="checkout-btn" class="btn btn-primary">Finalizar pedido</button>
+            <button id="empty-cart-btn" class="btn btn-secondary">Vaciar carrito</button>
+        </div>
+    </div>
+</div>
+
+<div id="checkout-modal" class="modal">
+    <div class="modal-content">
+        <button class="close-button" id="close-checkout-modal">&times;</button>
+        <h2>Datos del pedido</h2>
+
+        <form id="customer-form">
+            <div class="form-grid">
+                <input id="nombre" placeholder="Nombre" required>
+                <input id="apellido" placeholder="Apellido" required>
+                <input id="telefono" placeholder="Teléfono" required>
+                <input id="email" type="email" placeholder="Correo electrónico" required>
+                <input id="direccion" placeholder="Dirección" required>
+                <input id="entre-calles" placeholder="Entre calles" required>
+                <input id="localidad" placeholder="Localidad" required>
+                <input id="fecha-entrega" type="date" required>
+                <input id="horario" placeholder="Horario de entrega" required>
+            </div>
+
+            <textarea id="dedicatoria" placeholder="Dedicatoria o mensaje especial"></textarea>
+
+            <label class="file-label">
+                Foto opcional
+                <input type="file" id="foto" accept="image/*">
+            </label>
+
+            <button type="submit" class="btn btn-primary whatsapp-btn">Enviar pedido por WhatsApp</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Dulce Desayunos y Meriendas</p>
+</footer>
+
+<script src="JS/script.js"></script>
+</body>
+</html>
