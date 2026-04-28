@@ -357,36 +357,30 @@ Gracias por confiar en Dulce Desayunos y Meriendas.`;
         const loginForm = document.getElementById('login-form');
         const codigoInput = document.getElementById('codigo-acceso');
 
-        const productForm = document.getElementById('product-form');
-        const nombreInput = document.getElementById('admin-nombre');
-        const descripcionInput = document.getElementById('admin-descripcion');
-        const precioInput = document.getElementById('admin-precio');
-        const imagenInput = document.getElementById('admin-imagen');
-
+        const excelFile = document.getElementById('excel-file');
+        const uploadExcelBtn = document.getElementById('upload-excel-btn');
+        const excelFileName = document.getElementById('excel-file-name');
         const preview = document.getElementById('admin-preview');
-        const generateBtn = document.getElementById('generate-json-btn');
-        const clearBtn = document.getElementById('clear-admin-products-btn');
 
-        let productosAdmin = getAdminDraft();
+        let productosAdmin = [];
 
-        function renderPreview() {
+        function renderPreview(productos) {
             preview.innerHTML = '';
 
-            if (!productosAdmin.length) {
+            if (!productos.length) {
                 preview.innerHTML = '<p>No hay productos cargados.</p>';
                 return;
             }
 
-            productosAdmin.forEach(p => {
+            productos.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'admin-preview-item';
                 item.innerHTML = `
                     <div>
                         <strong>${p.nombre}</strong>
-                        <p>${p.descripcion}</p>
+                        <p>Código: ${p.codigo}</p>
                         <span>${formatPrice(p.precio)}</span>
                     </div>
-                    <button class="remove-item-btn" data-id="${p.id}">x</button>
                 `;
                 preview.appendChild(item);
             });
@@ -402,54 +396,74 @@ Gracias por confiar en Dulce Desayunos y Meriendas.`;
 
             loginSection.style.display = 'none';
             adminPanel.style.display = 'block';
-            renderPreview();
+            renderPreview(productosAdmin);
         });
 
-        productForm.addEventListener('submit', e => {
-            e.preventDefault();
-
-            const producto = {
-                id: Date.now(),
-                nombre: nombreInput.value.trim(),
-                descripcion: descripcionInput.value.trim(),
-                precio: Number(precioInput.value),
-                imagen: imagenInput.value.trim()
-            };
-
-            productosAdmin.push(producto);
-            saveAdminDraft(productosAdmin);
-            renderPreview();
-            productForm.reset();
-        });
-
-        preview.addEventListener('click', e => {
-            if (e.target.classList.contains('remove-item-btn')) {
-                productosAdmin = productosAdmin.filter(p => String(p.id) !== String(e.target.dataset.id));
-                saveAdminDraft(productosAdmin);
-                renderPreview();
+        excelFile.addEventListener('change', () => {
+            if (excelFile.files.length > 0) {
+                excelFileName.textContent = excelFile.files[0].name;
+            } else {
+                excelFileName.textContent = 'Ningún archivo seleccionado';
             }
         });
 
-        generateBtn.addEventListener('click', () => {
-            if (!productosAdmin.length) {
-                alert('No hay productos para generar.');
+        uploadExcelBtn.addEventListener('click', () => {
+            if (typeof XLSX === 'undefined') {
+                alert('No se cargó la librería para leer Excel. Revisá el script XLSX en socios.html.');
                 return;
             }
 
-            downloadJSON(productosAdmin);
-
-            alert(
-                'Archivo productos.json generado.\n\n' +
-                'Ahora reemplazalo en data/productos.json, hacé commit y push para actualizar la web online.'
-            );
-        });
-
-        clearBtn.addEventListener('click', () => {
-            if (confirm('¿Querés borrar la lista cargada en este navegador?')) {
-                productosAdmin = [];
-                saveAdminDraft(productosAdmin);
-                renderPreview();
+            if (excelFile.files.length === 0) {
+                alert('Seleccioná un archivo Excel.');
+                return;
             }
+
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                    productosAdmin = rows.map(row => {
+                        const codigo = String(row.Codigo || row.codigo || '').trim();
+                        const nombre = String(row['Nombre de Desayuno'] || row['Nombre'] || row.nombre || '').trim();
+                        const precio = Number(row.Precio || row.precio || 0);
+
+                        return {
+                            id: codigo,
+                            codigo: codigo,
+                            nombre: nombre,
+                            descripcion: '',
+                            precio: precio,
+                            imagen: `imagenes/${codigo}.jpg`
+                        };
+                    }).filter(p => p.codigo && p.nombre && p.precio > 0);
+
+                    if (!productosAdmin.length) {
+                        alert('No se encontraron productos válidos. Revisá que el Excel tenga las columnas Codigo, Nombre de Desayuno y Precio.');
+                        return;
+                    }
+
+                    renderPreview(productosAdmin);
+                    downloadJSON(productosAdmin);
+
+                    alert(
+                        '¡Catálogo generado correctamente!\n\n' +
+                        'Se descargó productos.json.\n\n' +
+                        'Ahora reemplazalo en la carpeta data/productos.json, hacé commit y push para actualizar la web online.'
+                    );
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Hubo un error al leer el Excel. Revisá el formato del archivo.');
+                }
+            };
+
+            reader.readAsArrayBuffer(excelFile.files[0]);
         });
     }
 
