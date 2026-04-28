@@ -350,123 +350,182 @@ Gracias por confiar en Dulce Desayunos y Meriendas.`;
     }
 
     function initSocios() {
-        if (pageId !== 'page-socios') return;
+    if (pageId !== 'page-socios') return;
 
-        const loginSection = document.getElementById('login-section');
-        const adminPanel = document.getElementById('admin-panel');
-        const loginForm = document.getElementById('login-form');
-        const codigoInput = document.getElementById('codigo-acceso');
+    const loginSection = document.getElementById('login-section');
+    const adminPanel = document.getElementById('admin-panel');
+    const loginForm = document.getElementById('login-form');
+    const codigoInput = document.getElementById('codigo-acceso');
 
-        const excelFile = document.getElementById('excel-file');
-        const uploadExcelBtn = document.getElementById('upload-excel-btn');
-        const excelFileName = document.getElementById('excel-file-name');
-        const preview = document.getElementById('admin-preview');
+    const excelFile = document.getElementById('excel-file');
+    const uploadExcelBtn = document.getElementById('upload-excel-btn');
+    const excelFileName = document.getElementById('excel-file-name');
+    const preview = document.getElementById('admin-preview');
 
-        let productosAdmin = [];
+    let productosAdmin = [];
 
-        function renderPreview(productos) {
-            preview.innerHTML = '';
+    function limpiarClave(texto) {
+        return String(texto || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .trim();
+    }
 
-            if (!productos.length) {
-                preview.innerHTML = '<p>No hay productos cargados.</p>';
-                return;
+    function obtenerValor(row, posiblesNombres) {
+        const claves = Object.keys(row);
+
+        for (const nombre of posiblesNombres) {
+            const nombreNormalizado = limpiarClave(nombre);
+            const claveEncontrada = claves.find(clave => limpiarClave(clave) === nombreNormalizado);
+
+            if (claveEncontrada) {
+                return row[claveEncontrada];
             }
-
-            productos.forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'admin-preview-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>${p.nombre}</strong>
-                        <p>Código: ${p.codigo}</p>
-                        <span>${formatPrice(p.precio)}</span>
-                    </div>
-                `;
-                preview.appendChild(item);
-            });
         }
 
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault();
+        return '';
+    }
 
-            if (codigoInput.value !== CODIGO_SOCIOS) {
-                alert('Código incorrecto.');
-                return;
-            }
+    function parsePrecio(value) {
+        if (typeof value === 'number') return value;
 
-            loginSection.style.display = 'none';
-            adminPanel.style.display = 'block';
-            renderPreview(productosAdmin);
-        });
+        return Number(
+            String(value || '')
+                .replace(/\$/g, '')
+                .replace(/\s/g, '')
+                .replace(/\./g, '')
+                .replace(',', '.')
+                .replace(/[^\d.-]/g, '')
+        ) || 0;
+    }
 
-        excelFile.addEventListener('change', () => {
-            if (excelFile.files.length > 0) {
-                excelFileName.textContent = excelFile.files[0].name;
-            } else {
-                excelFileName.textContent = 'Ningún archivo seleccionado';
-            }
-        });
+    function renderPreview(productos) {
+        preview.innerHTML = '';
 
-        uploadExcelBtn.addEventListener('click', () => {
-            if (typeof XLSX === 'undefined') {
-                alert('No se cargó la librería para leer Excel. Revisá el script XLSX en socios.html.');
-                return;
-            }
+        if (!productos.length) {
+            preview.innerHTML = '<p>No hay productos cargados.</p>';
+            return;
+        }
 
-            if (excelFile.files.length === 0) {
-                alert('Seleccioná un archivo Excel.');
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = function(event) {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-
-                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-                    productosAdmin = rows.map(row => {
-                        const codigo = String(row.Codigo || row.codigo || '').trim();
-                        const nombre = String(row['Nombre de Desayuno'] || row['Nombre'] || row.nombre || '').trim();
-                        const precio = Number(row.Precio || row.precio || 0);
-
-                        return {
-                            id: codigo,
-                            codigo: codigo,
-                            nombre: nombre,
-                            descripcion: '',
-                            precio: precio,
-                            imagen: `imagenes/${codigo}.jpg`
-                        };
-                    }).filter(p => p.codigo && p.nombre && p.precio > 0);
-
-                    if (!productosAdmin.length) {
-                        alert('No se encontraron productos válidos. Revisá que el Excel tenga las columnas Codigo, Nombre de Desayuno y Precio.');
-                        return;
-                    }
-
-                    renderPreview(productosAdmin);
-                    downloadJSON(productosAdmin);
-
-                    alert(
-                        '¡Catálogo generado correctamente!\n\n' +
-                        'Se descargó productos.json.\n\n' +
-                        'Ahora reemplazalo en la carpeta data/productos.json, hacé commit y push para actualizar la web online.'
-                    );
-
-                } catch (error) {
-                    console.error(error);
-                    alert('Hubo un error al leer el Excel. Revisá el formato del archivo.');
-                }
-            };
-
-            reader.readAsArrayBuffer(excelFile.files[0]);
+        productos.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'admin-preview-item';
+            item.innerHTML = `
+                <div>
+                    <strong>${p.nombre}</strong>
+                    <p>Código: ${p.codigo}</p>
+                    <span>${formatPrice(p.precio)}</span>
+                </div>
+            `;
+            preview.appendChild(item);
         });
     }
 
+    loginForm.addEventListener('submit', e => {
+        e.preventDefault();
+
+        if (codigoInput.value !== CODIGO_SOCIOS) {
+            alert('Código incorrecto.');
+            return;
+        }
+
+        loginSection.style.display = 'none';
+        adminPanel.style.display = 'block';
+        renderPreview(productosAdmin);
+    });
+
+    excelFile.addEventListener('change', () => {
+        excelFileName.textContent = excelFile.files.length > 0
+            ? excelFile.files[0].name
+            : 'Ningún archivo seleccionado';
+    });
+
+    uploadExcelBtn.addEventListener('click', () => {
+        if (typeof XLSX === 'undefined') {
+            alert('No se cargó la librería para leer Excel.');
+            return;
+        }
+
+        if (excelFile.files.length === 0) {
+            alert('Seleccioná un archivo Excel.');
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                console.log('Filas leídas del Excel:', rows);
+
+                productosAdmin = rows.map(row => {
+                    const codigo = String(obtenerValor(row, [
+                        'Codigo',
+                        'Código',
+                        'Cod',
+                        'Cód'
+                    ])).trim();
+
+                    const nombre = String(obtenerValor(row, [
+                        'Nombre de Desayuno',
+                        'Nombre Desayuno',
+                        'Nombre',
+                        'Producto',
+                        'Desayuno'
+                    ])).trim();
+
+                    const precio = parsePrecio(obtenerValor(row, [
+                        'Precio',
+                        'Importe',
+                        'Valor'
+                    ]));
+
+                    const descripcion = String(obtenerValor(row, [
+                        'Descripcion',
+                        'Descripción',
+                        'Detalle'
+                    ])).trim();
+
+                    return {
+                        id: codigo,
+                        codigo: codigo,
+                        nombre: nombre,
+                        descripcion: descripcion,
+                        precio: precio,
+                        imagen: `imagenes/${codigo}.jpg`
+                    };
+                }).filter(p => p.codigo && p.nombre && p.precio > 0);
+
+                if (!productosAdmin.length) {
+                    alert('No se encontraron productos válidos. Revisá las columnas del Excel.');
+                    return;
+                }
+
+                renderPreview(productosAdmin);
+                downloadJSON(productosAdmin);
+
+                alert(
+                    '¡Catálogo generado correctamente!\n\n' +
+                    'Se descargó productos.json.\n\n' +
+                    'Ahora reemplazalo en data/productos.json, hacé commit y push.'
+                );
+
+            } catch (error) {
+                console.error(error);
+                alert('Hubo un error al leer el Excel. Revisá el formato del archivo.');
+            }
+        };
+
+        reader.readAsArrayBuffer(excelFile.files[0]);
+    });
+}
     initLista();
     initPedidos();
     initSocios();
