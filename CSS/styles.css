@@ -498,3 +498,58 @@ footer {
         max-width: 100%;
     }
 }
+
+.excel-upload-box {
+    margin-top: 28px;
+    padding: 28px;
+    border: 2px dashed var(--border);
+    border-radius: 22px;
+    background: #fff7fa;
+    display: grid;
+    gap: 16px;
+    text-align: center;
+    justify-items: center;
+}
+
+.excel-upload-icon {
+    width: 68px;
+    height: 68px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(214, 106, 143, 0.12);
+    color: var(--primary);
+    font-size: 2rem;
+}
+
+.excel-upload-box h2 {
+    margin: 0 0 6px;
+    color: var(--primary);
+}
+
+.excel-upload-box p {
+    margin: 0;
+}
+
+.custom-file-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--primary);
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.custom-file-btn:hover {
+    background: #fff0f5;
+    transform: translateY(-2px);
+}
+
+.file-name {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+}

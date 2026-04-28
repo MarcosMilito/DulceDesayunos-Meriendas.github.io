@@ -39,31 +39,32 @@
         </form>
     </section>
 
-    <section id="admin-panel" class="admin-card" style="display:none;">
+   <section id="admin-panel" class="admin-card" style="display:none;">
         <h1>Actualizar catálogo</h1>
         <p>
-            Cargá productos con nombre, descripción, precio e imagen. Luego generá el archivo
-            <strong>productos.json</strong> y reemplazalo en <strong>data/productos.json</strong>.
+            Subí un Excel con las columnas <strong>Codigo</strong>, <strong>Nombre de Desayuno</strong> y <strong>Precio</strong>.
+            El sistema generará el archivo <strong>productos.json</strong> para actualizar la web.
         </p>
-        <h2>Cargar catálogo desde Excel</h2>
 
-        <input type="file" id="excel-file" accept=".xlsx, .xls">
+        <div class="excel-upload-box">
+            <div class="excel-upload-icon">📄</div>
 
-        <button id="upload-excel-btn" class="btn btn-primary">
-            Cargar Excel y generar catálogo
-        </button>
-        
-        <form id="product-form" class="admin-form">
-            <input id="admin-nombre" placeholder="Nombre del producto" required>
-            <textarea id="admin-descripcion" placeholder="Descripción" required></textarea>
-            <input id="admin-precio" type="number" min="0" step="0.01" placeholder="Precio" required>
-            <input id="admin-imagen" placeholder="URL o ruta de imagen, ejemplo: imagenes/desayuno1.jpg">
-            <button class="btn btn-primary" type="submit">Agregar producto</button>
-        </form>
+            <div>
+                <h2>Cargar catálogo desde Excel</h2>
+                <p>Seleccioná el archivo .xlsx o .xls con la lista de desayunos y meriendas.</p>
+            </div>
 
-        <div class="admin-actions">
-            <button id="generate-json-btn" class="btn btn-primary">Generar productos.json</button>
-            <button id="clear-admin-products-btn" class="btn btn-secondary">Limpiar lista</button>
+            <label for="excel-file" class="custom-file-btn">
+                Seleccionar Excel
+            </label>
+
+            <input type="file" id="excel-file" accept=".xlsx, .xls" hidden>
+
+            <span id="excel-file-name" class="file-name">Ningún archivo seleccionado</span>
+
+            <button id="upload-excel-btn" class="btn btn-primary" type="button">
+                Generar productos.json
+            </button>
         </div>
 
         <div id="admin-preview" class="admin-preview"></div>
