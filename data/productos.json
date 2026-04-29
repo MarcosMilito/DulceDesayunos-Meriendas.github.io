@@ -5,7 +5,7 @@
     "nombre": "Clásico",
     "descripcion": "",
     "precio": 20000,
-    "imagen": "imagenes/DES001.jpg"
+    "imagen": "imagenes/DES001.png"
   },
   {
     "id": "DES002",
@@ -13,7 +13,7 @@
     "nombre": "Matero",
     "descripcion": "",
     "precio": 18000,
-    "imagen": "imagenes/DES002.jpg"
+    "imagen": "imagenes/DES002.png"
   },
   {
     "id": "DES003",
@@ -21,6 +21,6 @@
     "nombre": "Chocotorta",
     "descripcion": "",
     "precio": 23000,
-    "imagen": "imagenes/DES003.jpg"
+    "imagen": "imagenes/DES003.png"
   }
 ]
