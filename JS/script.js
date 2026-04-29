@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ADMIN_DRAFT_KEY = 'dulce_admin_draft';
     const CODIGO_SOCIOS = 'dulce@12345&des';
 
-    const TELEFONO_PROVEEDOR = '5491100000000';
+    const TELEFONO_PROVEEDOR = '5491165744539';
 
     const pageId = document.body.id;
 
