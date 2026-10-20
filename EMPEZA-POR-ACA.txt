@@ -1,0 +1,19 @@
+DULCE 2.0 — ¿POR DÓNDE EMPIEZO?
+================================
+
+1. Esta carpeta contiene TODO el sistema y las 6 fotos.
+2. Para reemplazar tu sitio de GitHub Pages, subí el CONTENIDO de
+   esta carpeta a tu repositorio actual (antes guardá una copia).
+3. La página que ven tus clientes es: index.html
+4. Tu panel de administración se abre agregando /admin.html a la URL.
+5. En «Mi negocio», cargá tu número real de WhatsApp.
+6. En «Mis productos» editás precios y descripciones.
+7. En «Componentes» y «Materias primas» cargás costos.
+8. En «Promociones» y «Novedades» cambiás lo que se anuncia.
+
+ATENCIÓN: Al principio el administrador está en MODO PRUEBA.
+Los cambios NO se comparten entre celulares ni tienen acceso seguro.
+Para que sea una tienda administrable de verdad, configurá Supabase
+según GUIA-INSTALACION.md (secciones 4 y 5).
+
+Primero leé GUIA-INSTALACION.md. Está escrita paso a paso.

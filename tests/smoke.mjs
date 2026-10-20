@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {dirname} from 'node:path';
+const dir=dirname(dirname(fileURLToPath(import.meta.url)));
+globalThis.window={DULCE_CONFIG:{}};
+const memory=new Map();globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
+const d=await import('../assets/data.js');
+const p=d.initialPublic(),pr=d.initialPrivate();
+const prices={picada:26000,ricota:25000,clasico:22000,matero:20000,chocotorta:24000,premium:30000};
+assert.equal(p.products.length,6);
+for(const product of p.products){assert.equal(product.price,prices[product.id],`precio ${product.id}`);assert.ok(existsSync(join(dir,product.image)),`foto ${product.id}`);assert.ok(product.description.length>20)}
+assert.equal(p.products.filter(x=>x.category==='picadas').length,1);
+assert.equal(p.products.filter(x=>x.customizable).length,5);
+assert.equal(d.recipeCost('clasico',pr),0);
+pr.ingredients[0].cost=500;pr.recipes.clasico=[{ingredientId:'taza',quantity:2}];
+assert.equal(d.recipeCost('clasico',pr),1000);
+await d.savePublic(p);const restored=await d.loadPublic();assert.equal(restored.products.length,6);
+for(const name of ['index.html','admin.html','config.js','assets/site.js','assets/admin.js','assets/styles.css','supabase/01-crear-base.sql','GUIA-INSTALACION.md'])assert.ok(existsSync(join(dir,name)),name);
+assert.ok(readFileSync(join(dir,'index.html'),'utf8').includes('id="cart-drawer"'));
+assert.ok(readFileSync(join(dir,'admin.html'),'utf8').includes('id="admin-nav"'));
+console.log('✓ 6 productos, precios exactos, 6 fotos, categorías, cálculos, guardado local y archivos principales: OK');

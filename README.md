@@ -1,59 +1,18 @@
-# Dulce · Desayunos y Meriendas
+# DULCE 2.0 — Reconstrucción total
 
-Primera versión funcional, mobile-first, reconstruida desde cero. Incluye tienda pública, catálogo por categorías, personalización exclusiva para desayunos, carrito local, flujo de pedido, novedad de entrada con cierre automático a los 15 segundos y panel administrativo.
+Tienda responsive de Dulce Desayunos y Meriendas + panel administrativo.
 
-## Ejecutar en local
+- `index.html`: la tienda visible para los clientes.
+- `admin.html`: administrador (no aparece enlazado desde la tienda).
+- `assets/styles.css`: diseño de ambas interfaces.
+- `assets/site.js`: catálogo, carrito, personalización y pedido por WhatsApp.
+- `assets/admin.js`: gestión de productos, costos, ingredientes, promociones, novedades, ventas, envíos y negocio.
+- `assets/data.js`: datos iniciales y sincronización.
+- `assets/img/`: seis fotografías originales aportadas por el negocio.
+- `config.js`: credenciales PÚBLICAS de Supabase (vacío = modo local de demostración).
+- `supabase/01-crear-base.sql`: esquema y seguridad RLS para sincronización real.
+- `GUIA-INSTALACION.md`: instrucciones sencillas y completas para uso y publicación.
 
-Requisitos: Node.js 22.13 o superior.
+**Precios:** Picada $26.000; Ricota $25.000; Clásico $22.000; Matero $20.000; Chocotorta $24.000; Premium $30.000.
 
-```bash
-npm install
-npm run dev
-```
-
-Abrí la URL local indicada por la consola. Rutas principales:
-
-- `/`: tienda pública.
-- `/admin-demo`: panel completo con datos de muestra y cambios guardados en `localStorage`.
-- `/admin`: acceso protegido por ChatGPT/Sites y lista de correos autorizados.
-
-## Configurar el administrador seguro
-
-En desarrollo, copiá `.env.example` como `.env.local` y completá:
-
-```env
-ADMIN_EMAILS=duena@ejemplo.com,socio@ejemplo.com
-```
-
-En OpenAI Sites, cargá `ADMIN_EMAILS` como variable de entorno desde la configuración del sitio. `/admin` exige una sesión válida y verifica el correo en el servidor. La ruta no aparece en la navegación pública y, sin una lista configurada, deniega todo acceso.
-
-## Qué funciona en esta primera versión
-
-- Diseño responsive para celular, tablet y escritorio.
-- Filtros de catálogo, promociones, desayunos, meriendas, picadas y regalos.
-- Los productos originales Clásico, Matero y Chocotorta conservan nombres y precios del archivo anterior.
-- Personalizador únicamente para desayunos, con extras, mensaje y total estimado.
-- Carrito persistente por dispositivo, cantidades y resumen copiable para coordinar por WhatsApp o Instagram.
-- Novedad de apertura durante 15 segundos y sección permanente de novedades.
-- Panel administrativo profesional con resumen, ingresos/egresos, insumos, costos, precio editable, márgenes, promociones y novedades.
-- Autenticación y autorización reales en `/admin` cuando se publica en Sites y se configura `ADMIN_EMAILS`.
-
-## Alcance demostrativo y siguiente etapa
-
-El catálogo ampliado, movimientos financieros y recetas son datos de demostración. En `/admin-demo`, las ediciones se guardan solo en el navegador. No hay pagos ni pedidos reales.
-
-Para producción comercial se debe agregar:
-
-1. D1 (o backend equivalente) para productos, recetas, insumos, novedades, pedidos y movimientos.
-2. Endpoints protegidos que validen la identidad y el rol de administrador en cada escritura.
-3. Integración de pago y cálculo de envío.
-4. Canal de WhatsApp/Instagram real y consentimiento de datos.
-5. Carga de imágenes en almacenamiento persistente y copias de seguridad.
-
-## Compilar y desplegar
-
-```bash
-npm run build
-```
-
-El proyecto está preparado para OpenAI Sites mediante `.openai/hosting.json`. Para otro proveedor compatible con Next.js/Vinext, configurá `ADMIN_EMAILS` en el entorno y asegurá el mecanismo de identidad equivalente antes de habilitar `/admin`.
+**Empezar:** subí la carpeta al hosting estático o probá con `python -m http.server 8000`. Consultá `GUIA-INSTALACION.md` antes de poner el sitio en producción.
