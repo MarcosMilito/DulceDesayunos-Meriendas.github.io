@@ -1,9 +1,11 @@
 export const formatMoney = (n=0) => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);
 export const escapeHtml = (value='') => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const slug = () => (globalThis.crypto?.randomUUID?.()||`id${Date.now()}${Math.random().toString(36).slice(2)}`);
-export const zoneNames = ['Banfield','Lomas de Zamora','Temperley','Lanús','Remedios de Escalada','Adrogué','Turdera','Llavallol','Monte Grande','Burzaco','Longchamps','Avellaneda','Quilmes','Wilde','Sarandí','Gerli','Valentín Alsina','Villa Centenario','Ingeniero Budge','Fiorito','San José','Claypole','Rafael Calzada','Solano','Otra localidad (consultar)'];
+export const zonePrices = [['Lomas de Zamora', 0], ['Banfield centro', 0], ['Villa Centenario', 2000], ['Temperley', 2000], ['Remedios de Escalada', 2000], ['Ingeniero Budge', 2500], ['Villa Fiorito', 2500], ['San José', 2500], ['Turdera', 2500], ['Llavallol', 2500], ['Lanús', 3000], ['Adrogué', 3000], ['Luis Guillón', 3500], ['Burzaco', 4000], ['Gerli', 4000], ['Avellaneda', 4500], ['Monte Grande', 4500], ['Almirante Brown', 4800], ['El Jagüel', 4800]];
+export const zoneNames = zonePrices.map(([name])=>name);
 export const defaults = {
   public: {
+    brandVersion: 3,
     products: [
       {id:'picada',name:'Picada',category:'picadas',price:26000,description:'Una selección para compartir: fiambres, quesos, aceitunas, tomates cherry, panes y mucho sabor.',image:'assets/img/picada.jpeg',badge:'Para compartir',featured:true,customizable:false,alsoMerienda:false,active:true},
       {id:'ricota',name:'Ricota',category:'desayunos',price:25000,description:'Una bandeja dulce con medialunas, budín, tartaletas, galletitas, jugo e infusión.',image:'assets/img/ricota.jpeg',badge:'Bien dulce',featured:false,customizable:true,alsoMerienda:true,active:true},
@@ -14,9 +16,9 @@ export const defaults = {
     ],
     promos: [],
     news:[{id:'bienvenida',title:'¡Los momentos lindos se comparten!',subtitle:'Desayunos, meriendas y picadas hechas para sorprender. Elegí tu favorito y armemos algo especial.',image:'assets/img/premium.jpeg',active:true,duration:15,eyebrow:'Una dulce novedad'}],
-    shipping:zoneNames.map(name=>({name,price:null,enabled:true})),
+    shipping:zonePrices.map(([name,price])=>({name,price,enabled:true})),
     addons:[{id:'tarjeta',name:'Tarjeta con dedicatoria',price:0,enabled:true},{id:'taza',name:'Taza personalizada',price:null,enabled:true},{id:'jugo',name:'Jugo adicional',price:null,enabled:true},{id:'medialunas',name:'Medialunas extra',price:null,enabled:true},{id:'dulces',name:'Algo dulce extra',price:null,enabled:true}],
-    settings:{businessName:'Dulce · Desayunos y Meriendas',headline:'Hacemos que cada momento sea un poquito más dulce.',subheadline:'Desayunos, meriendas y picadas llenos de cariño. Elegí tu favorito, personalizalo y regalá una sonrisa.',whatsapp:'',instagram:'',contactEmail:'',deliveryNote:'Envíos a Zona Sur · Consultar disponibilidad y costo'}
+    settings:{businessName:'Dulce Desayunos y Meriendas',headline:'Hacemos que cada momento sea un poquito más dulce.',subheadline:'Desayunos, meriendas y picadas llenos de cariño. Elegí tu favorito y regalá una sonrisa.',whatsapp:'5491165744539',instagram:'https://www.instagram.com/dulcesdesayunosy?xtok=b240eTFxaWZ2N2t6',facebook:'https://www.facebook.com/share/19ioXKnjUQ/',contactEmail:'',deliveryNote:'Envíos a Zona Sur · Consultá las tarifas antes de confirmar tu pedido.'}
   },
   private: {
     ingredients:[
@@ -28,6 +30,18 @@ export const defaults = {
 };
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 export const initialPublic = () => clone(defaults.public);
+// Migration V3: applies new brand, contacts and shipping to existing stores once.
+// Preserves user-created products, promotions, news, costs and orders.
+export function upgradePublic(store){
+ if(!store || typeof store !== 'object') return initialPublic();
+ if(Number(store.brandVersion||0)>=3) return store;
+ const next = clone(store);
+ next.settings = {...(next.settings||{}),...defaults.public.settings};
+ next.shipping = clone(defaults.public.shipping);
+ next.brandVersion = 3;
+ return next;
+}
+
 export const initialPrivate = () => clone(defaults.private);
 const KEY_P='dulce_2_public', KEY_A='dulce_2_private', KEY_CART='dulce_2_cart';
 const cloud = () => {const c=window.DULCE_CONFIG||{};return Boolean(c.supabaseUrl && c.supabaseAnonKey)};
@@ -62,9 +76,9 @@ export async function sessionToken(){
 }
 export async function verifyAdmin(){if(!cloud())return false;const ses=getSession();if(!ses)return false;try{const tok=await sessionToken();const users=await request(`/rest/v1/admins?select=user_id&user_id=eq.${encodeURIComponent(ses.user.id)}`,{token:tok});return Array.isArray(users)&&users.length>0}catch{return false}}
 export async function loadPublic(){
- if(!cloud())return localGet(KEY_P,initialPublic);
+ if(!cloud())return upgradePublic(localGet(KEY_P,initialPublic));
  const rows=await request('/rest/v1/public_data?select=payload&id=eq.store');
- return rows?.[0]?.payload && Object.keys(rows[0].payload).length ? rows[0].payload : initialPublic();
+ return rows?.[0]?.payload && Object.keys(rows[0].payload).length ? upgradePublic(rows[0].payload) : initialPublic();
 }
 export async function loadPrivate(){
  if(!cloud())return localGet(KEY_A,initialPrivate);

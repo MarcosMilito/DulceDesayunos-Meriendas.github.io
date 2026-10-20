@@ -1,0 +1,9 @@
+DULCE DESAYUNOS Y MERIENDAS - ACTUALIZACIÓN 2.1
+
+Subí los archivos de este ZIP a la RAÍZ del repositorio de GitHub
+conservando las rutas. Reemplazá los archivos anteriores.
+
+NO REEMPLACES config.js (contiene las claves públicas de tu Supabase).
+NO ELIMINES tablas ni vuelvas a ejecutar el SQL de instalación.
+
+Leé GUIA-ACTUALIZACION.md antes de subir los cambios.
