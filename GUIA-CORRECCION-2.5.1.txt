@@ -1,0 +1,31 @@
+DULCES DESAYUNOS Y MERIENDAS — CORRECCIÓN 2.5.1
+
+PROBLEMA IDENTIFICADO
+En assets/site.js de la versión 2.5 se importaba dos veces la variable isCloud:
+Uncaught SyntaxError: Identifier 'isCloud' has already been declared.
+El navegador no podía ejecutar el módulo de la tienda. Por eso los productos quedaban en "Preparando tus favoritos..." y las promociones/novedades aparecían vacías.
+
+ARCHIVOS QUE TENÉS QUE REEMPLAZAR
+1. index.html (en la raíz del repositorio de GitHub).
+2. assets/site.js (en la carpeta assets).
+
+PASOS
+1. Entrá a GitHub, a tu repositorio DulceDesayunos-Meriendas.github.io.
+2. Reemplazá esos dos archivos conservando los nombres y las carpetas. No crees una carpeta extra.
+3. Hacé commit de los cambios en la rama que Vercel publica.
+4. Esperá a que el despliegue de Vercel figure como Ready.
+5. Abrí https://dulcedesayunosmeriendas.vercel.app/ y recargá con Ctrl + Shift + R, o en una ventana privada.
+6. Comprobá que aparezcan los seis productos, el carrito y las novedades.
+
+QUÉ NO TENÉS QUE TOCAR
+- No reemplaces ni borres config.js (tus datos de Supabase).
+- No cambies tus tablas SQL ni los datos del administrador.
+- No reemplaces assets/data.js, assets/admin.js ni assets/styles.css para esta corrección.
+
+DETALLE TÉCNICO
+La línea 1 de assets/site.js eliminó el segundo identificador isCloud. En index.html, la referencia al script cambió a assets/site.js?v=2.5.1 para evitar usar el archivo antiguo de la caché.
+
+PRUEBAS
+- Sintaxis de los módulos JS validada con Node.js.
+- Prueba local aislada con navegador Chromium: seis productos, sección novedades y cero errores JS.
+- No es posible probar la conexión real a tu Supabase ni el despliegue hasta que publiques estos dos archivos.
