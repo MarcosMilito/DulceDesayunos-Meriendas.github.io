@@ -6,8 +6,8 @@
   <title>Dulces Desayunos y Meriendas | Regalos para compartir</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,40,1;9..144,700,40,1&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.png"><link rel="stylesheet" href="assets/styles.css">
-  <script src="config.js"></script><script type="module" src="assets/site.js"></script>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.png"><link rel="stylesheet" href="assets/styles.css?v=2.4.0">
+  <script src="config.js"></script><script type="module" src="assets/site.js?v=2.4.0"></script>
 </head>
 <body class="site-body">
   <div class="announcement"><span>✷</span> Hecho con amor, para regalar momentos que se disfrutan <span>✷</span></div>
@@ -43,6 +43,6 @@
   <nav id="social-dock" class="social-dock" aria-label="Acceso rápido a WhatsApp, Instagram y Facebook"></nav>
   <div class="mobile-nav" aria-label="Navegación rápida"><a href="#inicio" class="active"><span>⌂</span>Inicio</a><a href="#productos"><span>▦</span>Productos</a><a href="#promociones"><span>✷</span>Promos</a><button id="mobile-cart"><span>♙</span>Pedido <b id="mobile-count">0</b></button></div>
   <div id="overlay" class="overlay hidden" aria-hidden="true"></div>
-  <aside id="cart-drawer" class="cart-drawer" role="dialog" aria-modal="true" aria-label="Mi pedido" aria-hidden="true"><div class="drawer-head"><div><small>YA CASI ESTÁ ♡</small><h2>Tu pedido <span>♡</span></h2></div><button class="icon-button" id="close-cart" aria-label="Cerrar carrito">✕</button></div><div id="cart-items" class="cart-items"></div><div class="cart-footer"><div id="cart-summary"></div><button class="btn btn-primary btn-full" id="start-checkout">Continuar con el pedido <span>→</span></button><small>El pedido se confirma coordinando por WhatsApp.</small></div></aside>
+  <aside id="cart-drawer" class="cart-drawer" role="dialog" aria-modal="true" aria-label="Mi pedido" aria-hidden="true"><div class="drawer-head"><div><button class="drawer-back" type="button" id="cart-back">← Volver a la tienda</button><small>YA CASI ESTÁ ♡</small><h2>Tu pedido <span>♡</span></h2></div><button class="icon-button" id="close-cart" aria-label="Cerrar carrito">✕</button></div><div id="cart-items" class="cart-items"></div><div class="cart-footer"><div id="cart-summary"></div><button class="btn btn-primary btn-full" id="start-checkout">Continuar con el pedido <span>→</span></button><small>El pedido se confirma coordinando por WhatsApp.</small></div></aside>
   <div id="modal-root"></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body></html>

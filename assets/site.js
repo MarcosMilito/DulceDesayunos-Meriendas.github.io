@@ -1,5 +1,7 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug} from './data.js';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug} from './data.js?v=2.4.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
+// Se conserva el formulario al volver desde la revisión, incluso la foto seleccionada.
+let checkoutDraft={}, checkoutPhoto=null, checkoutPhotoPreviewUrl=null;
 const $ = (s,root=document)=>root.querySelector(s);
 const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
 const img = (source)=>source || 'assets/img/clasico.jpeg';
@@ -21,7 +23,7 @@ function renderPromos(){const promotions=(store.promos||[]).filter(x=>x.active &
 }
 function renderNews(){const news=(store.news||[]).filter(n=>n.active);const featured=news[0];
  $('#shop-news-spot').innerHTML=featured?`<a href="#novedades" class="shop-news-feature"><div class="shop-news-thumbnail"><img src="${h(img(featured.image))}" alt="${h(featured.title)}"></div><div class="shop-news-copy"><small>✷ NOVEDAD DESTACADA</small><h3>${h(featured.title)}</h3><p>${h(featured.subtitle)}</p><span>Descubrí la novedad ↗</span></div><span class="shop-news-icon">♡</span></a>`:'';
- $('#news-grid').innerHTML=news.length?news.map(n=>`<article class="news-card"><img src="${h(img(n.image))}" alt="${h(n.title)}" loading="lazy"><div class="news-copy"><div class="kicker">${h(n.eyebrow||'NOVEDADES EN DULCE DESAYUNOS Y MERIENDAS')}</div><h3>${h(n.title)}</h3><p>${h(n.subtitle)}</p><a href="#productos" class="btn btn-primary">Descubrir productos ↗</a></div></article>`).join(''):'<div class="empty-state">Pronto vamos a compartir novedades.</div>'}
+ $('#news-grid').innerHTML=news.length?news.map(n=>`<article class="news-card"><img src="${h(img(n.image))}" alt="${h(n.title)}" loading="lazy"><div class="news-copy"><div class="kicker">${h(n.eyebrow||'NOVEDADES EN DULCES DESAYUNOS Y MERIENDAS')}</div><h3>${h(n.title)}</h3><p>${h(n.subtitle)}</p><a href="#productos" class="btn btn-primary">Descubrir productos ↗</a></div></article>`).join(''):'<div class="empty-state">Pronto vamos a compartir novedades.</div>'}
 // Iconos SVG locales y enlaces visibles en la portada, el encabezado y un acceso fijo.
 function socialIcon(kind){
  if(kind==='whatsapp')return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 11.7a8 8 0 0 1-11.8 7L4 20l1.3-4.2A8 8 0 1 1 20 11.7Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.8 7.4c-.3-.3-.8-.3-1.1 0-.7.8-.7 2.1 0 3.4a10 10 0 0 0 5.2 5.2c1.4.5 2.7.2 3.3-.5.3-.4.1-.8-.2-1l-1.6-.8c-.3-.2-.6-.1-.8.2l-.6.7a8.6 8.6 0 0 1-3.6-3.6l.7-.6c.3-.2.4-.5.2-.9Z" fill="currentColor"/></svg>`;
@@ -60,16 +62,16 @@ function renderCart(){
 }
 function drawer(open){$('#cart-drawer').classList.toggle('open',open);$('#cart-drawer').setAttribute('aria-hidden',String(!open));$('#overlay').classList.toggle('hidden',!open);document.body.classList.toggle('locked',open)}
 function closeModal(){const el=$('#modal-root');el.innerHTML='';document.body.classList.remove('locked');clearTimeout(newsTimer);modalCloser=null}
-function modal(html,opts={}){drawer(false);$('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="modal-card ${opts.large?'large':''}" role="dialog" aria-modal="true" aria-label="${h(opts.label||'Detalle')}">${html}</div></div>`;document.body.classList.add('locked');$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal()});$$('[data-close]').forEach(el=>el.addEventListener('click',closeModal));}
-const head=(label,title)=>`<div class="modal-top"><div><small>${h(label)}</small><h2>${h(title)}</h2></div><button class="icon-button" data-close aria-label="Cerrar">✕</button></div>`;
+function modal(html,opts={}){drawer(false);$('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="modal-card ${opts.large?'large':''}" role="dialog" aria-modal="true" aria-label="${h(opts.label||'Detalle')}">${html}</div></div>`;document.body.classList.add('locked');$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal()});$$('[data-close]').forEach(el=>el.addEventListener('click',closeModal));$('#modal-root [data-modal-back]')?.addEventListener('click',opts.onBack||closeModal);modalCloser=opts.onBack||closeModal;}
+const head=(label,title)=>`<div class="modal-top"><div class="modal-heading-actions"><button class="modal-back" type="button" data-modal-back aria-label="Volver al paso anterior"><span aria-hidden="true">←</span> Volver</button><div><small>${h(label)}</small><h2>${h(title)}</h2></div></div><button class="icon-button" data-close aria-label="Cerrar">✕</button></div>`;
 function details(id){const p=pById(id);if(!p)return;modal(`${head('HECHO CON CARIÑO ✷',p.name)}<div class="modal-body"><img src="${h(img(p.image))}" style="height:245px;object-fit:cover;width:100%;border-radius:17px" alt="${h(p.name)}"><p style="line-height:1.8;color:#827876;font-size:13px">${h(p.description)}</p>${p.contents?.length?`<div class="product-contents"><strong>¿Qué incluye?</strong><ul>${p.contents.map(c=>`<li>${h(c)}</li>`).join('')}</ul></div>`:''}<p class="small-muted">La foto ilustra la presentación. Consultá el contenido exacto al confirmar el pedido.</p><div class="total-line"><span>Precio del producto</span><strong>${money(productPrice(p,store))}</strong></div></div><div class="modal-foot"><button class="btn btn-primary btn-full" data-modal-add="${h(p.id)}">Agregar a mi pedido ♡</button></div>`)}
+// Paso 1. Datos de entrega, dedicatoria, observaciones y foto opcional.
 function beginCheckout(){
  if(!cart.length)return;
  const zones=(store.shipping||[]).filter(z=>z.enabled!==false);
- let photo=null, photoPreviewUrl=null;
  modal(`${head('UN PASITO MÁS ♡','Datos para tu pedido')}
  <form id="checkout-form"><div class="modal-body">
-  <p class="checkout-intro">Completá los datos de entrega y, si querés, sumá una dedicatoria o una foto especial para acompañar tu regalo.</p>
+  <p class="checkout-intro">Completá los datos de entrega y, si querés, sumá una dedicatoria o una foto especial.</p>
   <div class="form-row">
    <label class="form-field"><span>Nombre completo *</span><input name="name" required maxlength="100" autocomplete="name" placeholder="Tu nombre y apellido"></label>
    <label class="form-field"><span>Tu número de WhatsApp *</span><input name="phone" required inputmode="tel" maxlength="35" placeholder="Ej.: 11 1234 5678"></label>
@@ -78,74 +80,86 @@ function beginCheckout(){
   <label class="form-field"><span>Localidad *</span><select name="locality" id="checkout-locality" required><option value="">Seleccioná tu localidad…</option>${zones.map(z=>`<option value="${h(z.name)}">${h(z.name)}</option>`).join('')}</select></label>
   <div id="shipping-preview" class="price-note" aria-live="polite">Seleccioná una localidad para ver el costo del envío.</div>
   <div class="gift-options"><div class="gift-options-heading"><span class="gift-heart" aria-hidden="true">♡</span><div><strong>Hacé tu regalo más especial</strong><small>Opcional · preparado con cariño</small></div></div>
-   <label class="form-field" for="checkout-dedication"><span>Escribí tu dedicatoria (opcional)</span><textarea id="checkout-dedication" name="dedication" maxlength="600" rows="4" placeholder="Escribí acá el mensaje que querés que imprimamos y acompañe tu regalo…"></textarea></label>
+   <label class="form-field" for="checkout-dedication"><span>Dedicatoria para imprimir (opcional)</span><textarea id="checkout-dedication" name="dedication" maxlength="600" rows="4" placeholder="Escribí acá el mensaje que querés que imprimamos…"></textarea></label>
    <div class="dedication-help"><span>La imprimimos tal como la escribas.</span><span id="dedication-count">0 / 600</span></div>
-   <label class="form-field dedication-observations" for="checkout-dedication-notes"><span>¿Tenés alguna preferencia especial para la dedicatoria?</span><textarea id="checkout-dedication-notes" name="dedicationNotes" maxlength="450" rows="3" placeholder="Observaciones (opcional): tipo de letra, colores, diseño de la tarjeta, ubicación de la foto…"></textarea><small>Solo si querés indicarnos cómo preparar la dedicatoria. Los detalles de entrega se coordinan por WhatsApp.</small></label>
+   <label class="form-field dedication-observations" for="checkout-dedication-notes"><span>Observaciones de la dedicatoria (opcional)</span><textarea id="checkout-dedication-notes" name="dedicationNotes" maxlength="450" rows="3" placeholder="¿Tenés alguna preferencia especial? Colores, letra, diseño, detalles de la foto…"></textarea><small>Contanos cómo querés que preparemos la tarjeta.</small></label>
    <label for="checkout-photo" class="photo-picker"><span class="photo-picker-icon" aria-hidden="true">▧</span><span><strong>Elegir una foto especial (opcional)</strong><small>JPG, PNG o WEBP · hasta 8 MB</small></span><span class="photo-picker-action">Seleccionar</span></label>
    <input class="visually-hidden-photo" type="file" name="photo" id="checkout-photo" accept="image/jpeg,image/png,image/webp">
    <div id="photo-preview" class="photo-preview" aria-live="polite" hidden></div>
-   <p class="photo-help">Desde celulares compatibles vas a poder compartir la foto junto con el pedido. Si no, podrás abrir el WhatsApp del negocio y adjuntarla en la conversación.</p>
+   <p class="photo-help">Si elegís una foto, vas a poder adjuntarla en el mismo chat de WhatsApp después de compartir el pedido.</p>
   </div>
   <div class="total-line"><span>Productos <small>${cart.reduce((x,i)=>x+i.qty,0)} unidad/es</small></span><strong>${money(cartSum())}</strong></div>
-  <p class="small-muted">${cartNeedsQuote()?'Algunos extras requieren cotización. ':''}El importe y la disponibilidad finales se confirman directamente por WhatsApp.</p>
- </div><div class="modal-foot"><button class="btn btn-primary btn-full" type="submit">Revisar pedido antes de enviarlo →</button></div></form>`,{large:true});
- $('#checkout-locality').addEventListener('change',()=>{
+  <p class="small-muted">El importe final y la disponibilidad se confirman por WhatsApp.</p>
+ </div><div class="modal-foot step-actions"><button class="btn btn-soft" type="button" id="checkout-back">← Volver al carrito</button><button class="btn btn-primary" type="submit">Revisar pedido →</button></div></form>`,{large:true,label:'Datos para tu pedido',onBack:()=>{closeModal();drawer(true)}});
+ const form=$('#checkout-form');
+ // Los valores se preservan al volver desde el resumen, sin perder la dedicatoria.
+ for(const key of ['name','phone','address','locality','dedication','dedicationNotes']){
+  if(checkoutDraft[key]!==undefined && form.elements.namedItem(key))form.elements.namedItem(key).value=checkoutDraft[key];
+ }
+ function previewShipping(){
   const z=zones.find(x=>x.name===$('#checkout-locality').value);
   $('#shipping-preview').textContent=z?(z.price==null?`Envío a ${z.name}: a confirmar.`:z.price===0?`Envío a ${z.name}: GRATIS · Total estimado: ${money(cartSum())}`:`Envío a ${z.name}: ${money(z.price)} · Total estimado: ${money(cartSum()+Number(z.price))}`):'Seleccioná una localidad para ver el costo del envío.';
- });
- $('#checkout-dedication').addEventListener('input',e=>{$('#dedication-count').textContent=`${e.target.value.length} / 600`});
+ }
+ function showPhoto(){
+  const area=$('#photo-preview');area.hidden=!checkoutPhoto;
+  if(!checkoutPhoto){area.innerHTML='';return;}
+  area.innerHTML=`<img src="${checkoutPhotoPreviewUrl}" alt="Vista previa de tu fotografía"><div><strong>Foto seleccionada</strong><small>${h(checkoutPhoto.name)} · ${(checkoutPhoto.size/1024/1024).toFixed(1)} MB</small><button type="button" id="remove-photo" class="text-link">Quitar foto</button></div>`;
+  $('#remove-photo').addEventListener('click',()=>{checkoutPhoto=null;if(checkoutPhotoPreviewUrl)URL.revokeObjectURL(checkoutPhotoPreviewUrl);checkoutPhotoPreviewUrl=null;$('#checkout-photo').value='';showPhoto()});
+ }
+ const saveDraft=()=>{const fields=new FormData(form);for(const key of ['name','phone','address','locality','dedication','dedicationNotes'])checkoutDraft[key]=String(fields.get(key)||'')};
+ form.addEventListener('input',()=>{saveDraft();$('#dedication-count').textContent=`${$('#checkout-dedication').value.length} / 600`});
+ form.addEventListener('change',saveDraft);
+ $('#checkout-locality').addEventListener('change',previewShipping);
  $('#checkout-photo').addEventListener('change',e=>{
-  const candidate=e.target.files?.[0];
-  if(photoPreviewUrl){URL.revokeObjectURL(photoPreviewUrl);photoPreviewUrl=null;}
-  photo=null;$('#photo-preview').hidden=true;$('#photo-preview').innerHTML='';
-  if(!candidate)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(candidate.type)||candidate.size>8*1024*1024||candidate.size===0){toast('La foto debe ser JPG, PNG o WEBP y pesar menos de 8 MB.');e.target.value='';return;}
-  photo=candidate;photoPreviewUrl=URL.createObjectURL(photo);
-  $('#photo-preview').hidden=false;
-  $('#photo-preview').innerHTML=`<img src="${photoPreviewUrl}" alt="Vista previa de la foto elegida"><div><strong>Foto seleccionada</strong><small>${h(photo.name)} · ${(photo.size/1024/1024).toFixed(1)} MB</small><button type="button" id="remove-photo" class="text-link">Quitar foto</button></div>`;
-  $('#remove-photo').addEventListener('click',()=>{$('#checkout-photo').value='';photo=null;URL.revokeObjectURL(photoPreviewUrl);photoPreviewUrl=null;$('#photo-preview').hidden=true;$('#photo-preview').innerHTML=''});
+  const file=e.target.files?.[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024||file.size===0){toast('La foto debe ser JPG, PNG o WEBP y pesar menos de 8 MB.');e.target.value='';return;}
+  if(checkoutPhotoPreviewUrl)URL.revokeObjectURL(checkoutPhotoPreviewUrl);
+  checkoutPhoto=file;checkoutPhotoPreviewUrl=URL.createObjectURL(file);showPhoto();
  });
- $('#checkout-form').addEventListener('submit',e=>{
-  e.preventDefault();const f=new FormData(e.currentTarget),o=Object.fromEntries(f.entries());
-  const z=zones.find(x=>x.name===o.locality);
-  if(!z){toast('Seleccioná una localidad de entrega.');return;}
-  const dedication=String(o.dedication||'').trim();
-  const dedicationNotes=String(o.dedicationNotes||'').trim();
-  const lines=cart.map(it=>{
-   const p=pById(it.id);
-   const units=`${it.qty} ${it.qty===1?'unidad':'unidades'}`;
-   return `• ${p?.name||'Producto'} × ${units} — ${money(itemCost(it)*it.qty)}${it.extras?.length?`\n  Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n  Dedicatoria del producto: ${it.message}`:''}`;
-  }).join('\n');
-  const message=`¡Hola! Quisiera realizar el siguiente pedido en *Dulces Desayunos y Meriendas*:\n\n*PRODUCTOS*\n${lines}\n\n*RESUMEN DE IMPORTES*\nSubtotal: ${money(cartSum())}\nEnvío: ${z.price==null?'A confirmar':z.price===0?'Sin cargo':money(z.price)}\n${z.price!=null?`Total estimado: ${money(cartSum()+Number(z.price))}\n`:''}${cartNeedsQuote()?'Algunos adicionales requieren cotización.\n':''}\n*DATOS PARA LA ENTREGA*\nNombre: ${o.name}\nWhatsApp: ${o.phone}\nDirección: ${o.address}\nLocalidad: ${o.locality}${dedication?`\n\n*DEDICATORIA PARA IMPRIMIR*\n${dedication}`:''}${dedicationNotes?`\n\n*OBSERVACIONES DE LA DEDICATORIA*\n${dedicationNotes}`:''}${photo?'\n\n*FOTO PARA IMPRIMIR*\nElegí una foto para acompañar el pedido. La compartiré en esta conversación.':''}\n\nMuchas gracias. Quedo a la espera de la confirmación del pedido.`;
-  const phone=(store.settings?.whatsapp||'5491165744539').replace(/\D/g,'');
-  const canSharePhoto=Boolean(photo&&navigator.share&&navigator.canShare?.({files:[photo]}));
-  const photoHtml=photo?`<div class="confirm-photo"><img src="${photoPreviewUrl}" alt="Foto seleccionada para el regalo"><div><strong>Foto elegida: ${h(photo.name)}</strong><p>${canSharePhoto?'Podés intentar compartir esta foto y el resumen juntos con el menú de tu celular.':'Tu dispositivo requiere adjuntar la foto desde WhatsApp o usar la opción de compartir archivos, si está disponible.'}</p></div></div>`:'';
-  modal(`${head('ÚLTIMO PASO ♡','Revisá y enviá tu pedido')}
-    <div class="modal-body"><div class="coordination-notice" role="note"><span class="coordination-icon" aria-hidden="true">ⓘ</span><div><strong>Coordinación y confirmación del pedido</strong><p>La fecha, el horario de entrega, el medio de pago y cualquier observación se acordarán directamente por WhatsApp con las personas responsables de Dulces Desayunos y Meriendas. <b>Todos los pedidos están sujetos a disponibilidad y confirmación.</b></p></div></div>
-    <p class="confirm-message-intro">Revisá los productos, el importe y los datos que vamos a recibir:</p><label class="form-field"><span>Resumen de tu pedido</span><textarea id="order-message" class="order-message" readonly>${h(message)}</textarea></label>${photoHtml}
-    ${photo?`<div class="photo-delivery-note" role="note"><strong>♡ ¿Cómo enviamos tu foto?</strong><p>${canSharePhoto?'Tocá «Compartir pedido y foto», elegí WhatsApp en tu celular y seleccioná el chat del negocio (11 6574-4539). <b>Comprobá que se incluyan tanto el texto como la imagen antes de enviarlos.</b>':'Abrí el WhatsApp del negocio con el pedido completo y adjuntá la fotografía desde ese mismo chat con el ícono de adjuntar.'}</p><p>Por limitaciones de WhatsApp, la web no puede adjuntar archivos automáticamente al número del negocio ni enviar dos mensajes sin tu intervención.</p></div>`:''}
-    <p class="confirm-help">El pedido solo queda confirmado cuando el negocio te responde por WhatsApp.</p></div>
-    <div class="modal-foot confirm-actions"><button class="btn btn-soft" id="copy-order">Copiar resumen</button>${canSharePhoto?`<button class="btn btn-primary btn-full" id="share-complete-order">Compartir pedido y foto ↗</button>`:`<button class="btn btn-primary btn-full" id="send-whatsapp">Abrir WhatsApp y enviar ↗</button>`}</div>
-    ${photo?`<div class="photo-share-footer">${canSharePhoto?`<button class="btn btn-soft" id="send-whatsapp">O enviá el pedido directamente al WhatsApp del negocio</button>`:''}<button class="btn btn-soft" id="share-order-photo">Compartir solo la foto ↗</button><p>Si el celular no comparte ambos juntos, enviá el texto con la opción directa y después adjuntá la foto al mismo chat.</p></div>`:''}`,{large:true});
-  $('#copy-order').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#order-message').value);toast('Resumen copiado ♡')}catch{$('#order-message').select();toast('Seleccioná y copiá el resumen para enviarlo.')}});
-  $('#send-whatsapp')?.addEventListener('click',()=>{window.open(`https://wa.me/${phone}?text=${encodeURIComponent($('#order-message').value)}`,'_blank','noopener,noreferrer');toast(photo?'Revisá el pedido y adjuntá tu foto en el mismo chat si todavía no la compartiste.':'Revisá el pedido antes de enviarlo. ¡Gracias!')});
-  $('#share-complete-order')?.addEventListener('click',async()=>{
-   try{
-    await navigator.share({files:[photo],text:$('#order-message').value,title:'Pedido con foto · Dulces Desayunos y Meriendas'});
-    toast('Revisá que en WhatsApp se hayan compartido el resumen y la foto.');
-   }catch(err){if(err?.name!=='AbortError')toast('No se pudo compartir todo junto. Usá el envío directo y adjuntá la foto en el chat.');}
-  });
-  if(photo){$('#share-order-photo').addEventListener('click',async()=>{
-   try{
-    if(navigator.canShare?.({files:[photo]}) && navigator.share){await navigator.share({files:[photo],title:'Foto del pedido · Dulces Desayunos y Meriendas'});toast('Comprobá que compartiste la foto al chat correcto.');}
-    else{toast('Adjuntá la foto desde el chat de WhatsApp, con el botón de archivos o fotos.');}
-   }catch(err){if(err?.name!=='AbortError')toast('No fue posible compartirla. Adjuntala directamente en WhatsApp.');}
-  });}
+ $('#checkout-back').addEventListener('click',()=>{saveDraft();closeModal();drawer(true)});
+ form.addEventListener('submit',e=>{e.preventDefault();saveDraft();if(!zones.some(z=>z.name===checkoutDraft.locality)){toast('Seleccioná una localidad válida.');return;}reviewOrder()});
+ previewShipping();showPhoto();$('#dedication-count').textContent=`${(checkoutDraft.dedication||'').length} / 600`;
+}
+// Paso 2. Mensaje a WhatsApp. Todos los campos de la dedicatoria se muestran,
+// incluso si se dejaron vacíos, para que el negocio sepa que no faltan datos.
+function buildOrderMessage(){
+ const o=checkoutDraft;
+ const z=(store.shipping||[]).find(x=>x.name===o.locality);
+ if(!z)throw new Error('Localidad inválida');
+ const lines=cart.map(it=>{
+  const p=pById(it.id);
+  return `• ${p?.name||'Producto'} — ${it.qty} ${it.qty===1?'unidad':'unidades'} — ${money(itemCost(it)*it.qty)}${it.extras?.length?`\n  Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n  Dedicatoria del producto: ${it.message}`:''}`;
+ }).join('\n');
+ const dedication=(o.dedication||'').trim();
+ const notes=(o.dedicationNotes||'').trim();
+ const photoNote=checkoutPhoto?'\n\n*FOTOGRAFÍA*\nSe seleccionó una foto; se adjuntará manualmente en esta conversación.':'';
+ return `¡Hola! Quisiera realizar el siguiente pedido en *Dulces Desayunos y Meriendas*:\n\n*PRODUCTOS*\n${lines}\n\n*RESUMEN DE IMPORTES*\nSubtotal: ${money(cartSum())}\nEnvío: ${z.price==null?'A confirmar':z.price===0?'Sin cargo':money(z.price)}\n${z.price!=null?`Total estimado: ${money(cartSum()+Number(z.price))}\n`:''}${cartNeedsQuote()?'Algunos adicionales requieren cotización.\n':''}\n*DATOS PARA LA ENTREGA*\nNombre: ${o.name}\nWhatsApp: ${o.phone}\nDirección: ${o.address}\nLocalidad: ${o.locality}\n\n*DEDICATORIA PARA IMPRIMIR*\n${dedication||'No se solicitó dedicatoria.'}\n\n*OBSERVACIONES DE LA DEDICATORIA*\n${notes||'Sin observaciones especiales.'}${photoNote}\n\nMuchas gracias. Quedo a la espera de la confirmación del pedido.`;
+}
+function reviewOrder(){
+ const message=buildOrderMessage();
+ const phone=(store.settings?.whatsapp||'5491165744539').replace(/\D/g,'');
+ const giftPreview=`<div class="gift-review"><div><strong>♡ Dedicatoria para imprimir</strong><p>${h((checkoutDraft.dedication||'').trim()||'No se solicitó dedicatoria.')}</p></div><div><strong>✎ Observaciones de la dedicatoria</strong><p>${h((checkoutDraft.dedicationNotes||'').trim()||'Sin observaciones especiales.')}</p></div></div>`;
+ const photoHtml=checkoutPhoto?`<div class="confirm-photo"><img src="${checkoutPhotoPreviewUrl}" alt="Foto seleccionada"><div><strong>Foto para acompañar el pedido</strong><p>Cuando se abra WhatsApp, adjuntá esta foto en el mismo chat desde el botón de adjuntar.</p></div></div>`:'';
+ modal(`${head('ÚLTIMO PASO ♡','Revisá tu pedido')}
+ <div class="modal-body"><div class="coordination-notice" role="note"><span class="coordination-icon" aria-hidden="true">ⓘ</span><div><strong>Coordinación y confirmación del pedido</strong><p>La fecha, el horario de entrega, el medio de pago y cualquier observación se acordarán directamente por WhatsApp con las personas responsables de Dulces Desayunos y Meriendas. <b>Todos los pedidos están sujetos a disponibilidad y confirmación.</b></p></div></div>
+ <p class="confirm-message-intro">Revisá tu dedicatoria y las observaciones antes de compartir el pedido:</p>${giftPreview}
+ <label class="form-field"><span>Resumen completo de tu pedido</span><textarea id="order-message" class="order-message" readonly></textarea></label>${photoHtml}
+ <p class="confirm-help">El pedido solo queda confirmado cuando el negocio te responde por WhatsApp.</p></div>
+ <div class="modal-foot step-actions"><button class="btn btn-soft" id="review-back">← Modificar datos</button><button class="btn btn-primary" id="share-order">Compartir pedido ↗</button></div>`,{large:true,label:'Revisar pedido',onBack:beginCheckout});
+ // Con .value no se interpreta el mensaje como HTML, ni se pierde la dedicatoria.
+ $('#order-message').value=message;
+ $('#review-back').addEventListener('click',beginCheckout);
+ $('#share-order').addEventListener('click',()=>{
+  // wa.me direcciona el texto al número del negocio; adjuntar un archivo en
+  // ese chat requiere una acción del usuario (restricción de WhatsApp).
+  const url=`https://wa.me/${phone}?text=${encodeURIComponent($('#order-message').value)}`;
+  window.open(url,'_blank','noopener,noreferrer');
+  if(checkoutPhoto)toast('Si elegiste una foto, adjuntala en este mismo chat de WhatsApp.');
  });
 }
 function finishNews(){closeModal();$('#productos').scrollIntoView({behavior:'smooth'});}
 function showNews(){if(document.body.classList.contains('locked')||sessionStorage.getItem('dulce_news_seen'))return;const n=(store.news||[]).find(x=>x.active);if(!n)return;const d=Math.max(10,Math.min(20,Number(n.duration)||15));sessionStorage.setItem('dulce_news_seen','yes');
- $('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="feature-news" role="dialog" aria-modal="true" aria-label="Novedad de Dulces"><button class="icon-button" data-close aria-label="Cerrar novedad">✕</button><img src="${h(img(n.image))}" alt="${h(n.title)}"><div class="feature-news-content"><small>${h(n.eyebrow||'NOVEDAD DULCE ✷')}</small><h2>${h(n.title)}</h2><p>${h(n.subtitle)}</p><div class="news-progress"><span style="animation-duration:${d}s"></span></div><button class="btn btn-primary" id="news-explore">Ver productos ↗</button><p class="small-muted">Esta ventana se cierra sola en ${d} segundos.</p></div></div></div>`;document.body.classList.add('locked');$$('[data-close]').forEach(b=>b.addEventListener('click',finishNews));$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')finishNews()});$('#news-explore').addEventListener('click',finishNews);newsTimer=setTimeout(finishNews,d*1000);
+ $('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="feature-news" role="dialog" aria-modal="true" aria-label="Novedad de Dulces"><button class="news-back" id="news-back" type="button">← Volver</button><button class="icon-button" data-close aria-label="Cerrar novedad">✕</button><img src="${h(img(n.image))}" alt="${h(n.title)}"><div class="feature-news-content"><small>${h(n.eyebrow||'NOVEDAD DULCE ✷')}</small><h2>${h(n.title)}</h2><p>${h(n.subtitle)}</p><div class="news-progress"><span style="animation-duration:${d}s"></span></div><button class="btn btn-primary" id="news-explore">Ver productos ↗</button><p class="small-muted">Esta ventana se cierra sola en ${d} segundos.</p></div></div></div>`;document.body.classList.add('locked');$$('[data-close]').forEach(b=>b.addEventListener('click',finishNews));$('#news-back').addEventListener('click',finishNews);$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')finishNews()});$('#news-explore').addEventListener('click',finishNews);newsTimer=setTimeout(finishNews,d*1000);
 }
 function setupScrollReveals(){
  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -155,7 +169,7 @@ function setupScrollReveals(){
  targets.forEach(el=>observer.observe(el));
 }
 function setup(){
- $('#open-cart').addEventListener('click',()=>drawer(true));$('#mobile-cart').addEventListener('click',()=>drawer(true));$('#close-cart').addEventListener('click',()=>drawer(false));$('#overlay').addEventListener('click',()=>drawer(false));
+ $('#open-cart').addEventListener('click',()=>drawer(true));$('#mobile-cart').addEventListener('click',()=>drawer(true));$('#close-cart').addEventListener('click',()=>drawer(false));$('#cart-back').addEventListener('click',()=>drawer(false));$('#overlay').addEventListener('click',()=>drawer(false));
  $('#start-checkout').addEventListener('click',beginCheckout);
  $$('[data-filter-jump]').forEach(el=>el.addEventListener('click',()=>setFilter(el.dataset.filterJump,true)));
  $$('[data-filter]').forEach(el=>el.addEventListener('click',()=>setFilter(el.dataset.filter)));
@@ -163,7 +177,7 @@ function setup(){
  $('#promos-grid').addEventListener('click',e=>{const t=e.target.closest('[data-add]');if(t)add(t.dataset.add)});
  $('#cart-items').addEventListener('click',e=>{const t=e.target.closest('[data-remove],[data-qty],#explore-cart');if(!t)return;if(t.id==='explore-cart'){drawer(false);$('#productos').scrollIntoView({behavior:'smooth'});return}const i=Number(t.dataset.remove ?? t.dataset.qty);if(t.hasAttribute('data-remove'))cart.splice(i,1);else {cart[i].qty+=Number(t.dataset.delta);if(cart[i].qty<=0)cart.splice(i,1)}syncCart()});
  $('#modal-root').addEventListener('click',e=>{const addT=e.target.closest('[data-modal-add]');if(addT){add(addT.dataset.modalAdd);closeModal();drawer(true)}});
- window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();drawer(false)}});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#modal-root').children.length){(modalCloser||closeModal)();}else drawer(false)}});
  document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{document.querySelectorAll('.mobile-nav a').forEach(n=>n.classList.toggle('active',n.getAttribute('href')===a.getAttribute('href')))}));
 }
 (async()=>{setup();setupScrollReveals();try{store=await loadPublic()}catch(e){console.warn('No se pudo cargar el catálogo remoto:',e);store=initialPublic();toast('Estamos mostrando el catálogo de referencia. Algunas novedades pueden no estar actualizadas.')}renderProducts();renderPromos();renderNews();renderContact();syncCart();setTimeout(showNews,1200)})();

@@ -1,37 +1,35 @@
-# Actualización 2.2 → 2.3 | Dulces Desayunos y Meriendas
+# Dulces Desayunos y Meriendas — Actualización 2.4
 
-## Qué cambia
+## Qué corregimos
 
-- Corrección de la marca a **Dulces Desayunos y Meriendas**, tanto en la tienda como en la administración y el mensaje de WhatsApp.
-- En WhatsApp, cada renglón de producto dice `• Ricota × 1 unidad — $25.000` (o `2 unidades`, etc.), **sin enumeración**.
-- En el formulario de compra aparece el campo opcional **«¿Tenés alguna preferencia especial para la dedicatoria?»**, para observaciones de impresión, letras, colores, diseño y ubicación de la foto.
-- Las observaciones se añaden al pedido bajo **«OBSERVACIONES DE LA DEDICATORIA»**, solo si fueron escritas.
-- La foto elegida aparece en la vista previa. En teléfonos compatibles, el comprador puede usar **«Compartir pedido y foto»**: el dispositivo abre su menú para elegir WhatsApp y seleccionar el chat del negocio. También queda la alternativa de abrir el WhatsApp de atención al **11 6574-4539** y adjuntar la foto manualmente.
-- El aviso sobre fecha, horario, pago y disponibilidad **sigue únicamente en la pantalla previa**, nunca dentro del mensaje.
+- **Nombre:** Dulces Desayunos y Meriendas en la tienda, el administrador y el texto del pedido.
+- **WhatsApp:** los artículos figuran sin numeración, por ejemplo «• Ricota — 1 unidad — $ 25.000».
+- **Dedicatoria y observaciones:** se guardan durante el formulario y aparecen en la vista previa y en el mensaje de WhatsApp. Si no se completaron, se indica expresamente que no se solicitó una dedicatoria o que no hay observaciones.
+- **Foto opcional:** se puede elegir y ver una vista previa. La pantalla de confirmación tiene **un único botón principal: «Compartir pedido»**. Abre el WhatsApp de atención **11 6574-4539** con el resumen escrito. Si se seleccionó una foto, el cliente debe **adjuntarla manualmente** en ese mismo chat. Los enlaces comunes de WhatsApp no permiten adjuntarla automáticamente.
+- **Volver:** hay controles visibles para regresar desde el carrito a la tienda, desde el formulario al carrito y desde la revisión final al formulario sin perder los datos ni la foto. También hay «Volver» en el detalle de productos y la ventana de novedades.
+- **Coordinación:** el aviso de disponibilidad, fecha, horario y pago permanece en la web antes de enviar; no se incorpora al mensaje de WhatsApp.
+- **Caché:** el HTML utiliza `?v=2.4.0` para los archivos CSS y JS y así evita cargar scripts antiguos.
 
-## Archivos para reemplazar en GitHub
+## Cómo actualizar GitHub y Vercel
 
-Descomprimí el ZIP de «SOLO_ARCHIVOS_MODIFICADOS» y reemplazá exactamente estos archivos dentro del repositorio, respetando las carpetas:
+1. Descargá **Dulces_2_4_SOLO_ARCHIVOS_MODIFICADOS.zip** y descomprimilo.
+2. En tu repositorio **MarcosMilito/DulceDesayunos-Meriendas.github.io**, reemplazá los archivos conservando sus rutas:
+   - `index.html`
+   - `admin.html`
+   - `assets/site.js`
+   - `assets/styles.css`
+   - `assets/data.js`
+   - `assets/admin.js`
+3. Confirmá el commit en GitHub y esperá que Vercel termine el nuevo despliegue.
+4. Abrí tu sitio en una ventana privada. Verificá que `index.html` cargue `assets/site.js?v=2.4.0` y que el único botón final sea «Compartir pedido».
+5. Probá el carrito, la dedicatoria, las observaciones y la vuelta atrás desde el celular. **No hace falta enviar un pedido real** para revisar el mensaje.
 
-- `index.html`
-- `admin.html`
-- `assets/site.js`
-- `assets/styles.css`
-- `assets/data.js`
-- `assets/admin.js`
+**No reemplaces `config.js`.** Contiene tus datos públicos de Supabase. Esta actualización no modifica el esquema de la base de datos ni requiere volver a ejecutar SQL. Tampoco borra los productos, ventas ni cambios de precios registrados.
 
-No se cambió `config.js`, ni las fotografías, ni el logo, ni el esquema de Supabase. **No vuelvas a ejecutar la instalación SQL.** El cambio de marca en datos guardados se realiza como migración al leerlos, conservando el resto de los registros.
+## Sobre la foto
 
-## Publicación
+La foto no se envía automáticamente a WhatsApp: el cliente debe adjuntarla dentro de la conversación. Esta restricción existe porque `https://wa.me/...` solamente admite texto precargado, no archivos binarios. No se almacena ni sube la fotografía a Supabase desde este proceso.
 
-1. Hacé copia de seguridad de la versión anterior del repositorio.
-2. Subí los archivos anteriores a sus rutas originales y confirmá los cambios en GitHub.
-3. Esperá el despliegue automático de Vercel.
-4. Abrí la tienda con actualización forzada (`Ctrl`+`F5`) y hacé una compra de prueba en un celular.
-5. Elegí un producto y completá el pedido con y sin foto para comprobar ambos caminos. **No es necesario enviar una compra real** para comprobar el resumen.
+## Si seguís viendo «Dulce» o un formulario anterior
 
-## IMPORTANTE: fotos y WhatsApp
-
-Una página web común **no puede introducir una foto automáticamente en una conversación de WhatsApp elegida por número a través de `wa.me`**, ni forzar el envío de dos mensajes. Esta actualización aprovecha la función de **compartir archivos del propio celular** cuando está disponible. El cliente debe **elegir WhatsApp, elegir al destinatario y confirmar**. Algunos teléfonos pueden compartir el archivo pero no conservar el texto: revisá en WhatsApp que el resumen y la foto estén presentes antes de enviarlos. De lo contrario, usá **«Copiar resumen»**, o **«O enviá el pedido directamente al WhatsApp del negocio»** y adjuntá la foto en el mismo chat.
-
-La foto permanece en el dispositivo del comprador: **no se sube a Supabase ni a otro servidor** desde este formulario. Para enviar adjuntos de forma automática desde el número de una empresa haría falta una integración de servidor con WhatsApp Business Platform y permisos correspondientes; no forma parte de esta versión.
+Casi siempre significa que se publicó una versión anterior o que el navegador conservó archivos en caché. Comprobá en Vercel que la rama y el último despliegue sean correctos. Abrí el sitio en una ventana privada o actualizá con Ctrl+F5. Si inspeccionás el código fuente, debería figurar `assets/site.js?v=2.4.0`. Reemplazar **solo** `site.js` pero no `index.html` puede dejar la versión antigua en caché.
