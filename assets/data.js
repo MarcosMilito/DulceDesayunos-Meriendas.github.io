@@ -14,6 +14,7 @@ export const defaults = {
       {id:'chocotorta',name:'Chocotorta',category:'desayunos',price:24000,description:'El gusto más tentador: chocotorta, masas, medialuna, tartaleta, jugo y más.',image:'assets/img/chocotorta.jpeg',badge:'Amor al chocolate',featured:false,customizable:true,alsoMerienda:true,active:true},
       {id:'premium',name:'Premium',category:'desayunos',price:30000,description:'Una experiencia especial con sándwiches, medialunas, brownies, fruta fresca, jugo y dulces.',image:'assets/img/premium.jpeg',badge:'Para sorprender',featured:true,customizable:true,alsoMerienda:true,active:true}
     ],
+    builderItems: [], // Solo insumos publicados: id, nombre, unidad, precio y disponibilidad. Nunca costos.
     promos: [],
     news:[{id:'bienvenida',title:'¡Los momentos lindos se comparten!',subtitle:'Desayunos, meriendas y picadas hechas para sorprender. Elegí tu favorito y armemos algo especial.',image:'assets/img/premium.jpeg',active:true,duration:15,eyebrow:'Una dulce novedad'}],
     shipping:zonePrices.map(([name,price])=>({name,price,enabled:true})),
@@ -127,6 +128,16 @@ export async function updateCustomerOrderPayment(id,paid){
  }
  const token=await sessionToken();if(!token)throw Error('Tenés que iniciar sesión.');
  await request(`/rest/v1/customer_orders?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',token,body:{payment_status:status},extraHeaders:{Prefer:'return=minimal'}});
+ return true;
+}
+export async function deleteCustomerOrder(id){
+ if(!cloud()){
+  const list=localGet(KEY_ORDERS,()=>[]);
+  if(!list.some(o=>o.id===id))throw Error('El pedido no existe.');
+  localSet(KEY_ORDERS,list.filter(o=>o.id!==id));return true;
+ }
+ const token=await sessionToken();if(!token)throw Error('Tenés que iniciar sesión.');
+ await request(`/rest/v1/customer_orders?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',token,extraHeaders:{Prefer:'return=minimal'}});
  return true;
 }
 export function getCart(){return localGet(KEY_CART,()=>[])}

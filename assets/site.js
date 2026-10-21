@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=2.5.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.0.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -52,9 +52,34 @@ function itemCost(item){return Math.max(0,Number(item.unitPrice)||0)+(item.extra
 function cartSum(){return cart.reduce((sum,item)=>sum+itemCost(item)*item.qty,0)}
 function cartNeedsQuote(){return cart.some(item=>(item.extras||[]).some(e=>e.price===null||e.price===undefined))}
 function updateCount(){const n=cart.reduce((x,item)=>x+item.qty,0);$('#cart-count').textContent=n;$('#mobile-count').textContent=n}
+// Desayuno a medida: solo usa los campos PUBLICADOS; no lee costos privados.
+const customId='dulces-custom-breakfast';
+const selectedBuilder=new Map();
+function publishedBuilder(){return (store.builderItems||[]).filter(x=>x && x.id && x.name && Number.isFinite(Number(x.price)) && Number(x.price)>=0)}
+function builderChoiceHTML(i){
+ const selected=selectedBuilder.get(i.id)||0,enabled=i.inStock===true;
+ return `<div class="builder-item ${enabled?'':'not-available'}"><div class="builder-item-main"><div><strong>${h(i.name)}</strong><small>${h(i.unit||'unidad')} · ${enabled?'En stock':'Sin stock'}</small></div><b>${money(i.price)}</b></div><div class="builder-stepper"><button type="button" data-builder-step="${h(i.id)}" data-delta="-1" ${!enabled||!selected?'disabled':''} aria-label="Quitar ${h(i.name)}">−</button><output aria-label="Cantidad de ${h(i.name)}">${selected}</output><button type="button" data-builder-step="${h(i.id)}" data-delta="1" ${!enabled||selected>=20?'disabled':''} aria-label="Agregar ${h(i.name)}">+</button></div></div>`;
+}
+function renderBuilder(){
+ const items=publishedBuilder();const grid=$('#builder-products');if(!grid)return;
+ grid.innerHTML=items.length?items.map(builderChoiceHTML).join(''):'<div class="builder-empty"><strong>Pronto vas a poder armar tu bandeja ♡</strong><p>Estamos preparando la lista de ingredientes. Consultanos por WhatsApp si querés un desayuno especial.</p></div>';
+ const chosen=items.filter(i=>i.inStock===true&&(selectedBuilder.get(i.id)||0)>0);
+ const total=chosen.reduce((n,i)=>n+Number(i.price)*selectedBuilder.get(i.id),0);
+ $('#builder-selections').innerHTML=chosen.length?chosen.map(i=>`<div><span>${h(i.name)} × ${selectedBuilder.get(i.id)}</span><strong>${money(Number(i.price)*selectedBuilder.get(i.id))}</strong></div>`).join(''):'<p class="builder-placeholder">Tu bandeja está esperando sus primeros ingredientes. ♡</p>';
+ $('#builder-total-price').textContent=money(total);$('#builder-add').disabled=!chosen.length||total<=0;
+}
+function addBuilderBreakfast(){
+ const items=publishedBuilder().filter(i=>i.inStock && (selectedBuilder.get(i.id)||0)>0);
+ if(!items.length)return toast('Elegí al menos un componente disponible.');
+ const components=items.map(i=>({id:i.id,name:i.name,unit:i.unit,quantity:selectedBuilder.get(i.id),unitPrice:Number(i.price),lineTotal:Number(i.price)*selectedBuilder.get(i.id)}));
+ const total=components.reduce((n,i)=>n+i.lineTotal,0);if(total<=0)return toast('La bandeja debe tener un precio de venta.');
+ const key=JSON.stringify({type:'custom',components});const existing=cart.find(x=>x.key===key);
+ if(existing)existing.qty+=1;else cart.push({key,id:customId,name:'Desayuno personalizado',qty:1,unitPrice:total,components,extras:[]});
+ selectedBuilder.clear();renderBuilder();syncCart();toast('Tu desayuno personalizado está en el pedido ♡');drawer(true);
+}
 function syncCart(){checkoutOrderId=null;orderAlreadySaved=false;setCart(cart);renderCart();updateCount()}
 function add(pId,{extras=[],message=''}={}){const p=pById(pId);if(!p)return;const price=Number(productPrice(p,store))||0;const details=JSON.stringify({pId,price,extras,message});let line=cart.find(i=>i.key===details);if(line)line.qty++;else cart.push({key:details,id:pId,unitPrice:price,qty:1,extras,message});syncCart();toast(`${p.name} se agregó a tu pedido ♡`)}
-function cartItemsHTML(){return cart.map((item,i)=>{const p=pById(item.id);return `<div class="cart-row"><img src="${h(img(p?.image))}" alt=""><div class="cart-details"><h4>${h(p?.name||'Producto')}</h4>${item.extras?.length?`<small>${h(item.extras.map(e=>e.name).join(' · '))}</small>`:''}${item.message?`<small> · Dedicatoria: ${h(item.message)}</small>`:''}<strong>${money(itemCost(item)*item.qty)}${(item.extras||[]).some(e=>e.price==null)?' + extras a cotizar':''}</strong><div class="qty-controls"><button data-qty="${i}" data-delta="-1" aria-label="Quitar una unidad">−</button><span>${item.qty}</span><button data-qty="${i}" data-delta="1" aria-label="Agregar una unidad">+</button><button class="text-link" data-remove="${i}">Eliminar</button></div></div></div>`}).join('')}
+function cartItemsHTML(){return cart.map((item,i)=>{const p=pById(item.id);return `<div class="cart-row"><img src="${h(img(p?.image|| (item.id===customId?"assets/img/premium.jpeg":null)))}" alt=""><div class="cart-details"><h4>${h(p?.name||item.name||'Producto')}</h4>${item.components?.length?`<small>${h(item.components.map(c=>`${c.name} × ${c.quantity}`).join(' · '))}</small>`:''}${item.extras?.length?`<small>${h(item.extras.map(e=>e.name).join(' · '))}</small>`:''}${item.message?`<small> · Dedicatoria: ${h(item.message)}</small>`:''}<strong>${money(itemCost(item)*item.qty)}${(item.extras||[]).some(e=>e.price==null)?' + extras a cotizar':''}</strong><div class="qty-controls"><button data-qty="${i}" data-delta="-1" aria-label="Quitar una unidad">−</button><span>${item.qty}</span><button data-qty="${i}" data-delta="1" aria-label="Agregar una unidad">+</button><button class="text-link" data-remove="${i}">Eliminar</button></div></div></div>`}).join('')}
 function renderCart(){
  $('#cart-items').innerHTML=cart.length?cartItemsHTML():`<div class="cart-empty"><span>♡</span><h3>Tu pedido te está esperando</h3><p>Agregá algo rico y empezamos.</p><button class="btn btn-primary" id="explore-cart">Ver productos</button></div>`;
  $('#cart-summary').innerHTML=cart.length?`<div class="total-line"><span>Subtotal <small>(sin envío)</small></span><strong>${money(cartSum())}</strong></div>${cartNeedsQuote()?'<p class="small-muted">Hay extras a cotizar. El total definitivo se confirma por WhatsApp.</p>':''}`:'';
@@ -112,7 +137,7 @@ function buildOrderMessage(){
  if(!z)throw new Error('Localidad inválida');
  const lines=cart.map(it=>{
   const p=pById(it.id);
-  return `• ${p?.name||'Producto'} — ${it.qty} ${it.qty===1?'unidad':'unidades'} — ${money(itemCost(it)*it.qty)}${it.extras?.length?`\n  Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n  Dedicatoria del producto: ${it.message}`:''}`;
+  return `• ${p?.name||it.name||'Producto'} — ${it.qty} ${it.qty===1?'unidad':'unidades'} — ${money(itemCost(it)*it.qty)}${it.components?.length?`\n  Incluye: ${it.components.map(c=>`${c.name} × ${c.quantity}`).join(', ')}`:''}${it.extras?.length?`\n  Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n  Dedicatoria del producto: ${it.message}`:''}`;
  }).join('\n');
  const dedication=(o.dedication||'').trim();
  const notes=(o.dedicationNotes||'').trim();
@@ -142,7 +167,7 @@ function reviewOrder(){
   const request={
    id,customer_name:checkoutDraft.name.trim(),customer_phone:checkoutDraft.phone.trim(),
    delivery_address:checkoutDraft.address.trim(),locality:checkoutDraft.locality,
-   items:cart.map(it=>({productId:it.id,name:pById(it.id)?.name||'Producto',quantity:it.qty,unitPrice:itemCost(it),lineTotal:itemCost(it)*it.qty})),
+   items:cart.map(it=>({productId:it.id,name:pById(it.id)?.name||it.name||'Producto',quantity:it.qty,unitPrice:itemCost(it),lineTotal:itemCost(it)*it.qty,components:it.components||[]})),
    subtotal,shipping,total:shipping==null?null:subtotal+shipping,
    dedication:checkoutDraft.dedication||'',dedication_notes:checkoutDraft.dedicationNotes||'',source:'web',payment_status:'pendiente'
   };
@@ -165,7 +190,7 @@ function showNews(){if(document.body.classList.contains('locked')||sessionStorag
 }
 function setupScrollReveals(){
  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- const targets=[...document.querySelectorAll('.category-section,.products-section,.news-section,.how-section,.contact-section,#promociones,.category-card,.step')];
+ const targets=[...document.querySelectorAll('.category-section,.products-section,.news-section,.contact-section,#promociones,.category-card')];
  targets.forEach((el,i)=>{el.classList.add('reveal-on-scroll');el.style.setProperty('--reveal-delay',`${Math.min(i%3,2)*75}ms`)});
  const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){entry.target.classList.add('revealed');observer.unobserve(entry.target)}}},{threshold:0.09,rootMargin:'0px 0px -30px 0px'});
  targets.forEach(el=>observer.observe(el));
@@ -173,6 +198,8 @@ function setupScrollReveals(){
 function setup(){
  $('#open-cart').addEventListener('click',()=>drawer(true));$('#mobile-cart').addEventListener('click',()=>drawer(true));$('#close-cart').addEventListener('click',()=>drawer(false));$('#cart-back').addEventListener('click',()=>drawer(false));$('#overlay').addEventListener('click',()=>drawer(false));
  $('#start-checkout').addEventListener('click',beginCheckout);
+ $('#builder-products').addEventListener('click',e=>{const b=e.target.closest('[data-builder-step]');if(!b||b.disabled)return;const item=publishedBuilder().find(i=>i.id===b.dataset.builderStep);if(!item||!item.inStock)return;const next=Math.max(0,Math.min(20,(selectedBuilder.get(item.id)||0)+Number(b.dataset.delta||0)));if(next)selectedBuilder.set(item.id,next);else selectedBuilder.delete(item.id);renderBuilder()});
+ $('#builder-add').addEventListener('click',addBuilderBreakfast);
  $$('[data-filter-jump]').forEach(el=>el.addEventListener('click',()=>setFilter(el.dataset.filterJump,true)));
  $$('[data-filter]').forEach(el=>el.addEventListener('click',()=>setFilter(el.dataset.filter)));
  $('#product-grid').addEventListener('click',e=>{const target=e.target.closest('[data-add],[data-detail],[data-show-all]');if(!target)return;if(target.dataset.add)add(target.dataset.add);else if(target.dataset.detail)details(target.dataset.detail);else if(target.hasAttribute('data-show-all'))setFilter('todos')});
@@ -182,4 +209,4 @@ function setup(){
  window.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#modal-root').children.length){(modalCloser||closeModal)();}else drawer(false)}});
  document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{document.querySelectorAll('.mobile-nav a').forEach(n=>n.classList.toggle('active',n.getAttribute('href')===a.getAttribute('href')))}));
 }
-(async()=>{setup();setupScrollReveals();try{store=await loadPublic()}catch(e){console.warn('No se pudo cargar el catálogo remoto:',e);store=initialPublic();toast('Estamos mostrando el catálogo de referencia. Algunas novedades pueden no estar actualizadas.')}renderProducts();renderPromos();renderNews();renderContact();syncCart();setTimeout(showNews,1200)})();
+(async()=>{setup();setupScrollReveals();try{store=await loadPublic()}catch(e){console.warn('No se pudo cargar el catálogo remoto:',e);store=initialPublic();toast('Estamos mostrando el catálogo de referencia. Algunas novedades pueden no estar actualizadas.')}renderProducts();renderPromos();renderNews();renderContact();renderBuilder();syncCart();setTimeout(showNews,1200)})();
