@@ -1109,3 +1109,82 @@ body.locked .social-dock{pointer-events:none;opacity:0}
  .site-body .builder-item-thumb{width:58px;height:58px}
  .site-body .contact-card .social-links .social-link-name{font-size:12px}
 }
+
+
+/* ===== Dulces 3.3 · Acceso del administrador y collage de bandejas ===== */
+/* Seguridad visual: ocultar de verdad la pantalla no activa, incluso con estilos legacy. */
+#admin-login[hidden],#admin-app[hidden],#admin-login.hidden{display:none!important;visibility:hidden!important}
+#admin-app:not(.ready){display:none!important}
+#admin-app.ready:not([hidden]){display:flex}
+/* Sólo se puede navegar por el panel una vez que el módulo de acceso lo habilita. */
+.admin-body #admin-login.admin-login-shell{background:var(--cream);min-height:100dvh}
+.admin-body #admin-login .admin-login-art{
+  background:linear-gradient(145deg,#fbe2d8 0%,#feece5 49%,#f7d9da 100%);
+  padding:25px 23px 20px;display:flex!important;flex-direction:column;
+  gap:13px;justify-content:center;align-items:stretch;min-width:0;isolation:isolate;
+}
+.admin-body #admin-login .admin-login-art:after{content:none!important}
+.login-gallery-title{font-family:var(--serif);font-size:clamp(17px,1.55vw,23px);font-weight:700;color:#69403f;text-align:center;line-height:1.25;letter-spacing:-.025em}
+.gallery-sparkle{color:#e3778b;margin:0 5px}
+.login-gallery-grid{display:grid;flex:1;min-height:0;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:12px;max-height:800px;width:100%}
+.admin-body #admin-login .login-photo{margin:0;position:relative;min-width:0;min-height:0;overflow:hidden;background:#fff7f0;border:5px solid rgba(255,255,255,.96);border-radius:21px;box-shadow:0 12px 28px rgba(93,46,39,.12);transform:none}
+.admin-body #admin-login .login-photo img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transform:none;transition:transform .5s ease}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.admin-body #admin-login .login-photo:hover img{transform:scale(1.07)}}
+.admin-body #admin-login .login-photo:nth-child(2) img{object-position:center 40%}
+.admin-body #admin-login .login-photo:nth-child(3) img{object-position:center 45%}
+.admin-body #admin-login .gallery-footer{margin:0;text-align:center;font-size:12px;letter-spacing:.07em;color:#8b5556;font-weight:700}
+.admin-body #admin-login .login-card{max-width:450px}
+.admin-body #admin-login .login-kicker{font-weight:800;letter-spacing:.16em;font-size:12px;color:var(--coral-dark);margin:0 0 12px}
+.admin-body #admin-login .login-welcome-mark{display:grid;place-items:center;background:#ffe6e5;color:#bd6078;border:1px solid #f5ced4;border-radius:17px;font-size:32px;width:54px;height:54px;margin-bottom:19px}
+.admin-body #admin-login .login-card h1{margin:0 0 17px}
+.admin-body #admin-login .login-card>p:not(.login-kicker){font-size:16px;line-height:1.65;margin:0 0 24px;color:var(--muted)}
+.admin-body #admin-login .login-help{margin-top:23px;padding-top:18px;border-top:1px solid var(--line)}
+.admin-body #admin-login .login-help a{display:inline-flex;min-height:42px;align-items:center;font-size:15px;font-weight:700}
+.admin-body #admin-login .login-card .form-field{margin-bottom:14px}
+.admin-body #admin-login .login-card input{font-size:16px;min-height:49px}
+/* Ningún control de apariencia ni logo en la pantalla de acceso.
+   La apariencia se hereda de la tienda a través de theme.js. */
+.admin-body #admin-login .theme-toggle,.admin-body #admin-login .brand{display:none!important}
+:root[data-theme="dark"] .admin-body #admin-login.admin-login-shell{background:#251b23}
+:root[data-theme="dark"] .admin-body #admin-login .admin-login-art{background:linear-gradient(140deg,#503540,#382633,#3b2936)}
+:root[data-theme="dark"] .admin-body #admin-login .login-photo{border-color:#57404c;background:#36242f;box-shadow:0 13px 28px rgba(0,0,0,.25)}
+:root[data-theme="dark"] .admin-body #admin-login .login-gallery-title{color:#fae3e7}
+:root[data-theme="dark"] .admin-body #admin-login .gallery-footer{color:#e3bbcb}
+:root[data-theme="dark"] .admin-body #admin-login .login-welcome-mark{background:#533741;color:#fac3d0;border-color:#865969}
+:root[data-theme="dark"] .admin-body #admin-login .login-kicker{color:#f2a9bc}
+:root[data-theme="dark"] .admin-body #admin-login .login-card>p:not(.login-kicker){color:#dbc2ce}
+@media(min-width:901px){
+ .admin-body #admin-login.admin-login-shell{grid-template-columns:minmax(0,44%) minmax(0,56%)!important}
+ .admin-body #admin-login .admin-login-art{min-height:100dvh;max-height:none}
+ .admin-body #admin-login .admin-login-panel{padding:42px clamp(36px,5vw,90px)!important}
+}
+@media(max-width:900px){
+ .admin-body #admin-login.admin-login-shell{display:flex!important;flex-direction:column;min-height:100dvh}
+ .admin-body #admin-login .admin-login-art{min-height:0!important;height:235px;flex:none;padding:12px;gap:8px}
+ .admin-body #admin-login .login-gallery-title{font-size:16px}
+ .admin-body #admin-login .login-gallery-grid{display:flex;overflow-x:auto;gap:9px;max-height:none;scroll-snap-type:x mandatory;min-height:0;padding:2px 1px 4px}
+ .admin-body #admin-login .login-photo{min-width:0;flex:0 0 28%;border-width:3px;border-radius:13px;scroll-snap-align:start}
+ .admin-body #admin-login .gallery-footer{font-size:10px}
+ .admin-body #admin-login .admin-login-panel{padding:32px 22px 48px!important;align-items:center}
+ .admin-body #admin-login .login-card{max-width:540px}
+}
+@media(max-width:620px){
+ .admin-body #admin-login .admin-login-art{height:175px;padding:10px;gap:6px}
+ .admin-body #admin-login .login-gallery-title{font-size:13px}
+ .admin-body #admin-login .login-gallery-grid{gap:7px}
+ .admin-body #admin-login .login-photo{flex-basis:34%;border-width:2px}
+ .admin-body #admin-login .gallery-footer{font-size:9px}
+ .admin-body #admin-login .admin-login-panel{padding:27px 20px 36px!important}
+ .admin-body #admin-login .login-welcome-mark{width:44px;height:44px;font-size:26px;margin-bottom:13px}
+ .admin-body #admin-login .login-card h1{font-size:clamp(30px,8.5vw,39px)}
+}
+@media(prefers-reduced-motion:reduce){.admin-body #admin-login .login-photo img{transition:none}}
+/* Las fotos originales deben rellenar sus recuadros, no heredar el recorte ovalado del diseño antiguo. */
+.admin-body #admin-login .login-photo img{
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  outline:0!important;max-width:none;width:100%!important;height:100%!important;
+  object-fit:cover!important;transform:none;
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .admin-body #admin-login .login-photo:hover img{transform:scale(1.06)}
+}

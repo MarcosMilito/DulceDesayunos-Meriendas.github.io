@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.2.0';
+import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.3.0';
 let pub=initialPublic(),priv=initialPrivate(),page='inicio',demo=!isCloud(),saving=false,customerOrders=[],ordersError='';
 const $=(s,root=document)=>root.querySelector(s), $$=(s,root=document)=>[...root.querySelectorAll(s)];
 const pageInfo={inicio:['Vista general','Un resumen fácil de entender de tu negocio.'],productos:['Mis productos','Fotos, descripciones, precios y componentes de cada bandeja.'],insumos:['Materias primas','Administrá los costos, precios al cliente y disponibilidad para armar desayunos.'],promos:['Promociones','Creá ofertas sin cambiar el precio de lista.'],novedades:['Novedades','Elegí qué se muestra al abrir la tienda.'],pedidos:['Pedidos','Consultá los pedidos y controlá quién pagó.'],envios:['Envíos','Asigná un valor de envío a cada localidad.'],ajustes:['Mi negocio','Tus datos de contacto y copias de seguridad.']};
@@ -19,7 +19,7 @@ async function refreshCustomerOrders(){
  try{customerOrders=await loadCustomerOrders();ordersError='';}
  catch(e){ordersError=e.message;customerOrders=[];}
 }
-function startApp(){ $('#admin-login').classList.add('hidden');$('#admin-app').classList.add('ready');if(demo){const el=document.createElement('div');el.className='admin-notice';el.textContent='Vista de prueba: los cambios se guardan solo en este dispositivo.';document.body.prepend(el)}render();}
+function startApp(){ const login=$('#admin-login'),app=$('#admin-app'); login.hidden=true;login.classList.add('hidden');app.hidden=false;app.classList.add('ready');if(demo){const el=document.createElement('div');el.className='admin-notice';el.textContent='Vista de prueba: los cambios se guardan solo en este dispositivo.';document.body.prepend(el)}render();}
 async function init(){
  if(isCloud()){
   $('#login-mode').innerHTML=`<form id="secure-login"><label class="form-field"><span>Correo de administrador</span><input type="email" name="email" required autocomplete="username" placeholder="tu@email.com"></label><label class="form-field"><span>Contraseña</span><input type="password" name="password" required autocomplete="current-password" placeholder="Tu contraseña"></label><button class="btn btn-primary btn-full" type="submit">Ingresar al panel ↗</button><div id="login-error" style="margin-top:12px"></div></form>`;
