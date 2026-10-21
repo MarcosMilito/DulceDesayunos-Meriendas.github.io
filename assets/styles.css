@@ -692,3 +692,187 @@ body.locked .social-dock{pointer-events:none;opacity:0}
   .admin-table td,.admin-table td strong{font-size:14px}
   .admin-table th{font-size:12px}
 }
+
+
+/* ============================================================
+   DULCES 2.9 | LEGIBILIDAD REAL EN TODA LA WEB
+   Partimos del diseño 2.8. No cambiamos tipografía, fotos ni paleta.
+   Los párrafos secundarios y las descripciones se leen a 17-18px.
+   Todo se aplica a ambos temas (claro y oscuro).
+   ============================================================ */
+
+/* Los tres sectores marcados en las capturas del cliente. */
+.site-body .product-description {
+  font-size: 18px;
+  line-height: 1.55;
+  min-height: 0;
+  overflow-wrap: break-word;
+}
+.site-body .section-heading > p,
+.site-body .section-heading.center > p {
+  font-size: 18px;
+  line-height: 1.55;
+}
+.site-body .contact-card p,
+.site-body #delivery-note {
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+/* El resto de la lectura: ninguna letra secundaria esencial minúscula. */
+.site-body .step p,
+.site-body .promo-card p,
+.site-body .promo-empty p,
+.site-body .news-copy p,
+.site-body .feature-news-content p,
+.site-body .contact-section > .shell p,
+.site-body .custom-copy p,
+.site-body .shop-news-copy p,
+.site-body .checkout-intro,
+.site-body .confirm-message-intro,
+.site-body .coordination-notice p,
+.site-body .product-contents ul,
+.site-body .footer-inner p,
+.site-body .footer-inner > a:last-child {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.site-body .hero-copy > p {font-size:19px;line-height:1.65}
+.site-body .hero-proof p,
+.site-body .hero-proof small,
+.site-body .benefit-inner > div {font-size:16px;line-height:1.5}
+.site-body .header-nav a,
+.site-body .header-cart,
+.site-body .filter-tabs button,
+.site-body .btn,
+.site-body .small-button {font-size:16px}
+.site-body .product-total,
+.site-body .product-category,
+.site-body .product-badge,
+.site-body .old-price,
+.site-body .category-card small,
+.site-body .category-card div > span,
+.site-body .kicker,
+.site-body .eyebrow,
+.site-body .light-eyebrow,
+.site-body .social-intro,
+.site-body .hero-social-label {font-size:14.5px}
+.site-body .product-contents,
+.site-body .form-help,
+.site-body .small-muted,
+.site-body .confirm-help,
+.site-body .gift-review p,
+.site-body .gift-review strong,
+.site-body .dedication-help,
+.site-body .dedication-observations > small,
+.site-body .cart-row small,
+.site-body .cart-footer > small,
+.site-body .total-line small,
+.site-body .order-save-warning {font-size:15.5px;line-height:1.55}
+.site-body .form-field > span,
+.site-body .price-note,
+.site-body .cart-row .cart-details > strong,
+.site-body .checkout-heading,
+.site-body .order-message {font-size:17px;line-height:1.55}
+.site-body .form-field input,
+.site-body .form-field select,
+.site-body .form-field textarea {font-size:17px}
+.site-body .social-link,
+.site-body .contact-card .social-link,
+.site-body .hero-social-links .social-link {font-size:15px!important}
+.site-body .social-link-name,
+.site-body .dock-caption,
+.site-body .theme-toggle,
+.site-body .theme-toggle-text {font-size:14px}
+
+/* Administrador: menús, tablas, auxiliares y ficha del pedido. */
+.admin-body .admin-nav button,
+.admin-body .admin-side-bottom a,
+.admin-body .admin-side-bottom button,
+.admin-body .admin-button,
+.admin-body .order-pay,
+.admin-body .order-unpay,
+.admin-body .order-mini {font-size:16px}
+.admin-body .admin-page-header p,
+.admin-body .admin-top p,
+.admin-body .admin-user,
+.admin-body .admin-list-entry p,
+.admin-body .admin-news-card p,
+.admin-body .hint,
+.admin-body .inline-note,
+.admin-body .admin-tip,
+.admin-body .admin-notice,
+.admin-body .admin-filter,
+.admin-body .recipe-empty,
+.admin-body .success-box,
+.admin-body .error-box,
+.admin-body .order-detail p,
+.admin-body .order-detail-line {font-size:16px;line-height:1.55}
+.admin-body .admin-table td,
+.admin-body .admin-table td strong,
+.admin-body .recipe-line,
+.admin-body .recipe-line strong,
+.admin-body .switch-row,
+.admin-body .tiny-input,
+.admin-body .admin-input {font-size:16px}
+.admin-body .admin-table th,
+.admin-body .admin-table td small,
+.admin-body .metric small,
+.admin-body .metric p,
+.admin-body .badge-status,
+.admin-body .pill,
+.admin-body .admin-menu-caption,
+.admin-body .bar-group,
+.admin-body .data-footer,
+.admin-body .order-card-top small,
+.admin-body .order-card-top p,
+.admin-body .order-card-bottom small,
+.admin-body .order-mini small {font-size:14.5px}
+.admin-body .login-help {font-size:15.5px;line-height:1.6}
+
+/* Celular: evitar que los puntos de corte reduzcan la letra otra vez. */
+@media(max-width:620px) {
+  .site-body .product-description {font-size:17px;line-height:1.52;min-height:0;-webkit-line-clamp:6}
+  .site-body .section-heading > p,
+  .site-body .section-heading.center > p,
+  .site-body .contact-card p,
+  .site-body #delivery-note {font-size:17px;line-height:1.55}
+  .site-body .step p,
+  .site-body .promo-card p,
+  .site-body .promo-empty p,
+  .site-body .contact-section > .shell p,
+  .site-body .news-copy p,
+  .site-body .custom-copy p,
+  .site-body .product-contents ul,
+  .site-body .shop-news-copy p {font-size:16.5px;line-height:1.55}
+  .site-body .hero-copy > p {font-size:17px}
+  .site-body .hero-proof p,
+  .site-body .hero-proof small,
+  .site-body .benefit-inner > div {font-size:14.5px}
+  .site-body .filter-tabs button,
+  .site-body .btn,
+  .site-body .small-button,
+  .site-body .product-actions .small-button {font-size:15px;line-height:1.4}
+  .site-body .product-total,
+  .site-body .product-category,
+  .site-body .product-badge,
+  .site-body .old-price,
+  .site-body .category-card small,
+  .site-body .category-card div > span {font-size:14px}
+  .site-body .form-field > span,
+  .site-body .form-field input,
+  .site-body .form-field select,
+  .site-body .form-field textarea {font-size:16.5px}
+  .site-body .social-link-name,
+  .site-body .theme-toggle-text,
+  .site-body .dock-caption {font-size:13.5px}
+  .admin-body .admin-nav button,
+  .admin-body .admin-button,
+  .admin-body .admin-page-header p,
+  .admin-body .admin-top p,
+  .admin-body .admin-table td,
+  .admin-body .admin-table td strong,
+  .admin-body .order-detail p {font-size:15.5px}
+  .admin-body .admin-table th,
+  .admin-body .admin-table td small {font-size:14px}
+}
