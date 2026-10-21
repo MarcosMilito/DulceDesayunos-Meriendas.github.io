@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.0.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.1.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -43,7 +43,7 @@ function renderContact(){
  if(instagram)socials.push({kind:'instagram',name:'Instagram',href:socialUrl(instagram)});
  if(facebook && /^https:\/\/(?:www\.)?facebook\.com\//i.test(facebook))socials.push({kind:'facebook',name:'Facebook',href:facebook});
  const linkHtml=(s,compact=false)=>`<a class="social-link social-${s.kind}${compact?' social-icon-only':''}" href="${h(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${s.name} de Dulces Desayunos y Meriendas en una pestaña nueva" title="${s.name}"><span class="social-link-icon">${socialIcon(s.kind)}</span>${compact?'':`<span class="social-link-name">${s.name}</span>`}</a>`;
- $('#header-socials').innerHTML=socials.map(s=>linkHtml(s,true)).join('');
+ // El menú superior se mantiene despejado; los accesos sociales siguen en el dock y contacto.
  $('#hero-socials').innerHTML=`<span class="hero-social-label">Seguinos y encontranos en</span><div class="hero-social-links">${socials.map(s=>linkHtml(s)).join('')}</div>`;
  $('#social-links').innerHTML=socials.map(s=>linkHtml(s)).join('');
  $('#social-dock').innerHTML=`<span class="dock-caption">¡Hablemos!</span>${socials.map(s=>linkHtml(s,true)).join('')}`;
@@ -56,15 +56,40 @@ function updateCount(){const n=cart.reduce((x,item)=>x+item.qty,0);$('#cart-coun
 const customId='dulces-custom-breakfast';
 const selectedBuilder=new Map();
 function publishedBuilder(){return (store.builderItems||[]).filter(x=>x && x.id && x.name && Number.isFinite(Number(x.price)) && Number(x.price)>=0)}
+const illustrationKeys=new Set(['taza','jugo','medialuna','chocotorta','brownie','alfajor','budin','tartaleta','sandwich','fruta','fiambres','queso','pan','galletitas','mate','yogur','miel','regalo']);
+function builderIllustration(item){
+ const selected=String(item.illustration||'').toLowerCase();
+ if(illustrationKeys.has(selected))return selected;
+ const name=String(item.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const groups=[['chocotorta',/chocotorta|choco.?torta/],['jugo',/jugo|botell|bebida|naranja|licuado/],['medialuna',/medialuna|croissant|factura/],['taza',/taza|cafe|infusion|chocolatada/],['brownie',/brownie|brownie|cuadrado de chocolate/],['alfajor',/alfajor/],['tartaleta',/tarta|ricota|lemon pie|pastafrola|pastafrolla/],['budin',/budin|bizcochuelo|torta|muffin|cupcake/],['sandwich',/sandwich|sanguche|sanguch|miga/],['fruta',/fruta|ensalada|manzana|banana/],['fiambres',/fiambre|salame|jamon|picada|chorizo/],['queso',/queso/],['pan',/pan|tostada|grisines/],['galletitas',/gallet|masita|cookie/],['mate',/mate|yerba/],['yogur',/yogur/],['miel',/miel|mermelada|dulce de leche/]];
+ return groups.find(([,re])=>re.test(name))?.[0]||'regalo';
+}
+function builderImage(i){return `assets/illustrations/${builderIllustration(i)}.svg`}
 function builderChoiceHTML(i){
  const selected=selectedBuilder.get(i.id)||0,enabled=i.inStock===true;
- return `<div class="builder-item ${enabled?'':'not-available'}"><div class="builder-item-main"><div><strong>${h(i.name)}</strong><small>${h(i.unit||'unidad')} · ${enabled?'En stock':'Sin stock'}</small></div><b>${money(i.price)}</b></div><div class="builder-stepper"><button type="button" data-builder-step="${h(i.id)}" data-delta="-1" ${!enabled||!selected?'disabled':''} aria-label="Quitar ${h(i.name)}">−</button><output aria-label="Cantidad de ${h(i.name)}">${selected}</output><button type="button" data-builder-step="${h(i.id)}" data-delta="1" ${!enabled||selected>=20?'disabled':''} aria-label="Agregar ${h(i.name)}">+</button></div></div>`;
+ return `<div class="builder-item ${enabled?'':'not-available'} ${selected?'is-selected':''}">
+ <img class="builder-item-thumb" src="${builderImage(i)}" alt="" loading="lazy">
+ <div class="builder-item-info"><span class="builder-stock ${enabled?'':'out'}">${enabled?'● Disponible':'○ Agotado'}</span><strong>${h(i.name)}</strong><small>${h(i.unit||'unidad')}</small><b>${money(i.price)} <span>/ ${h(i.unit||'unidad')}</span></b></div>
+ <div class="builder-stepper"><button type="button" class="builder-decrease" data-builder-step="${h(i.id)}" data-delta="-1" ${!enabled||!selected?'disabled':''} aria-label="Quitar ${h(i.name)}">−</button><output aria-label="Cantidad de ${h(i.name)}">${selected}</output><button type="button" class="builder-increase" data-builder-step="${h(i.id)}" data-delta="1" ${!enabled||selected>=20?'disabled':''} aria-label="Agregar ${h(i.name)}">${selected?'＋':'＋ Agregar'}</button></div></div>`;
 }
 function renderBuilder(){
  const items=publishedBuilder();const grid=$('#builder-products');if(!grid)return;
- grid.innerHTML=items.length?items.map(builderChoiceHTML).join(''):'<div class="builder-empty"><strong>Pronto vas a poder armar tu bandeja ♡</strong><p>Estamos preparando la lista de ingredientes. Consultanos por WhatsApp si querés un desayuno especial.</p></div>';
+ const sorted=[...items].sort((a,b)=>Number(b.inStock===true)-Number(a.inStock===true));
+ grid.innerHTML=sorted.length?sorted.map(builderChoiceHTML).join(''):'<div class="builder-empty"><strong>Pronto vas a poder armar tu bandeja ♡</strong><p>Estamos preparando la lista de ingredientes. Consultanos por WhatsApp si querés un desayuno especial.</p></div>';
  const chosen=items.filter(i=>i.inStock===true&&(selectedBuilder.get(i.id)||0)>0);
  const total=chosen.reduce((n,i)=>n+Number(i.price)*selectedBuilder.get(i.id),0);
+ const visual=[];
+ chosen.forEach(i=>{
+  const count=selectedBuilder.get(i.id)||0;
+  // Se dibuja cada unidad para cantidades pequeñas. Para cantidades en gramos, se representa como una pieza ilustrativa y un contador.
+  const discrete=!/gramo|kilogramo|mililitro|litro|paquete/i.test(i.unit||'unidad');
+  const repeats=discrete?Math.min(count,8):1;
+  for(let n=0;n<repeats;n++) visual.push({item:i,remaining:discrete&&n===repeats-1&&count>8?count-7:0,label:!discrete?`${count} ${i.unit}`:''});
+ });
+ const scene=$('#builder-preview');
+ if(scene){
+  scene.innerHTML=`<div class="tray-preview-heading"><span>Vista de tu bandeja</span><small>${chosen.length?'Se actualiza al agregar':'Empezá a personalizar'}</small></div><div class="tray-board"><div class="tray-board-inner">${visual.length?visual.map(({item,remaining,label},index)=>`<div class="tray-piece" style="--piece-order:${index%6}" title="${h(item.name)}${label?` · ${h(label)}`:''}"><img src="${builderImage(item)}" alt="${h(item.name)}" draggable="false">${remaining?`<span class="tray-piece-count">+${remaining}</span>`:''}${label?`<span class="tray-piece-count">${h(label)}</span>`:''}</div>`).join(''):'<div class="tray-board-empty"><span>♡</span><p>Tu bandeja empieza acá</p></div>'}</div></div><p class="tray-preview-footnote">Vista ilustrativa · La presentación real puede variar</p>`;
+ }
  $('#builder-selections').innerHTML=chosen.length?chosen.map(i=>`<div><span>${h(i.name)} × ${selectedBuilder.get(i.id)}</span><strong>${money(Number(i.price)*selectedBuilder.get(i.id))}</strong></div>`).join(''):'<p class="builder-placeholder">Tu bandeja está esperando sus primeros ingredientes. ♡</p>';
  $('#builder-total-price').textContent=money(total);$('#builder-add').disabled=!chosen.length||total<=0;
 }
@@ -79,7 +104,7 @@ function addBuilderBreakfast(){
 }
 function syncCart(){checkoutOrderId=null;orderAlreadySaved=false;setCart(cart);renderCart();updateCount()}
 function add(pId,{extras=[],message=''}={}){const p=pById(pId);if(!p)return;const price=Number(productPrice(p,store))||0;const details=JSON.stringify({pId,price,extras,message});let line=cart.find(i=>i.key===details);if(line)line.qty++;else cart.push({key:details,id:pId,unitPrice:price,qty:1,extras,message});syncCart();toast(`${p.name} se agregó a tu pedido ♡`)}
-function cartItemsHTML(){return cart.map((item,i)=>{const p=pById(item.id);return `<div class="cart-row"><img src="${h(img(p?.image|| (item.id===customId?"assets/img/premium.jpeg":null)))}" alt=""><div class="cart-details"><h4>${h(p?.name||item.name||'Producto')}</h4>${item.components?.length?`<small>${h(item.components.map(c=>`${c.name} × ${c.quantity}`).join(' · '))}</small>`:''}${item.extras?.length?`<small>${h(item.extras.map(e=>e.name).join(' · '))}</small>`:''}${item.message?`<small> · Dedicatoria: ${h(item.message)}</small>`:''}<strong>${money(itemCost(item)*item.qty)}${(item.extras||[]).some(e=>e.price==null)?' + extras a cotizar':''}</strong><div class="qty-controls"><button data-qty="${i}" data-delta="-1" aria-label="Quitar una unidad">−</button><span>${item.qty}</span><button data-qty="${i}" data-delta="1" aria-label="Agregar una unidad">+</button><button class="text-link" data-remove="${i}">Eliminar</button></div></div></div>`}).join('')}
+function cartItemsHTML(){return cart.map((item,i)=>{const p=pById(item.id);return `<div class="cart-row"><img src="${h(img(p?.image|| (item.id===customId?"assets/illustrations/regalo.svg":null)))}" alt=""><div class="cart-details"><h4>${h(p?.name||item.name||'Producto')}</h4>${item.components?.length?`<small>${h(item.components.map(c=>`${c.name} × ${c.quantity}`).join(' · '))}</small>`:''}${item.extras?.length?`<small>${h(item.extras.map(e=>e.name).join(' · '))}</small>`:''}${item.message?`<small> · Dedicatoria: ${h(item.message)}</small>`:''}<strong>${money(itemCost(item)*item.qty)}${(item.extras||[]).some(e=>e.price==null)?' + extras a cotizar':''}</strong><div class="qty-controls"><button data-qty="${i}" data-delta="-1" aria-label="Quitar una unidad">−</button><span>${item.qty}</span><button data-qty="${i}" data-delta="1" aria-label="Agregar una unidad">+</button><button class="text-link" data-remove="${i}">Eliminar</button></div></div></div>`}).join('')}
 function renderCart(){
  $('#cart-items').innerHTML=cart.length?cartItemsHTML():`<div class="cart-empty"><span>♡</span><h3>Tu pedido te está esperando</h3><p>Agregá algo rico y empezamos.</p><button class="btn btn-primary" id="explore-cart">Ver productos</button></div>`;
  $('#cart-summary').innerHTML=cart.length?`<div class="total-line"><span>Subtotal <small>(sin envío)</small></span><strong>${money(cartSum())}</strong></div>${cartNeedsQuote()?'<p class="small-muted">Hay extras a cotizar. El total definitivo se confirma por WhatsApp.</p>':''}`:'';

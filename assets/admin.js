@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.0.0';
+import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.1.0';
 let pub=initialPublic(),priv=initialPrivate(),page='inicio',demo=!isCloud(),saving=false,customerOrders=[],ordersError='';
 const $=(s,root=document)=>root.querySelector(s), $$=(s,root=document)=>[...root.querySelectorAll(s)];
 const pageInfo={inicio:['Vista general','Un resumen fácil de entender de tu negocio.'],productos:['Mis productos','Fotos, descripciones, precios y componentes de cada bandeja.'],insumos:['Materias primas','Administrá los costos, precios al cliente y disponibilidad para armar desayunos.'],promos:['Promociones','Creá ofertas sin cambiar el precio de lista.'],novedades:['Novedades','Elegí qué se muestra al abrir la tienda.'],pedidos:['Pedidos','Consultá los pedidos y controlá quién pagó.'],envios:['Envíos','Asigná un valor de envío a cada localidad.'],ajustes:['Mi negocio','Tus datos de contacto y copias de seguridad.']};
@@ -94,8 +94,11 @@ function viewWebOrder(id){const o=customerOrders.find(x=>x.id===id);if(!o)return
 async function deleteWebOrder(id){
  const o=customerOrders.find(x=>x.id===id);if(!o)return;
  if(!confirm(`¿Eliminar definitivamente el pedido de ${o.customer_name||'este cliente'}? Esta acción no se puede deshacer.`))return;
- try{await deleteCustomerOrder(id);await refreshCustomerOrders();closeModal();render();toast('Pedido eliminado');}
- catch(e){error('No se pudo eliminar: '+e.message+' Revisá el SQL 03.');}
+ // Eliminación optimista: la tarjeta se oculta inmediatamente tras confirmar.
+ customerOrders=customerOrders.filter(x=>x.id!==id);
+ closeModal();render();toast('Eliminando pedido…');
+ try{await deleteCustomerOrder(id);toast('Pedido eliminado correctamente');}
+ catch(e){customerOrders.push(o);customerOrders.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));render();error('No se pudo eliminar: '+e.message+' El pedido fue restaurado. Revisá los permisos del SQL 03.');}
 }
 async function toggleWebOrder(id){
  const o=customerOrders.find(x=>x.id===id);if(!o)return;
@@ -129,7 +132,7 @@ function editRecipe(id){const p=pub.products.find(x=>x.id===id);if(!p)return;let
 }
 function makeBuilderPublic(){
  pub.builderItems=priv.ingredients.filter(i=>i.availableForBuilder===true && i.salePrice!==null && i.salePrice!==undefined && Number.isFinite(Number(i.salePrice)))
- .map(i=>({id:String(i.id),name:String(i.name),unit:String(i.unit||'unidad'),price:Math.max(0,Number(i.salePrice)),inStock:i.inStock===true}));
+ .map(i=>({id:String(i.id),name:String(i.name),unit:String(i.unit||'unidad'),price:Math.max(0,Number(i.salePrice)),inStock:i.inStock===true,illustration:String(i.illustration||'')}));
 }
 async function publishBuilder(){
  makeBuilderPublic();
@@ -137,18 +140,20 @@ async function publishBuilder(){
  return true;
 }
 function editIngredient(id){
- const item=priv.ingredients.find(i=>i.id===id)||{name:'',unit:'unidad',cost:0,salePrice:'',inStock:false,availableForBuilder:false};
+ const item=priv.ingredients.find(i=>i.id===id)||{name:'',unit:'unidad',cost:0,salePrice:'',inStock:false,availableForBuilder:false,illustration:''};
+ const art=[['','Automático según el nombre'],['taza','Taza'],['jugo','Botellita de jugo'],['medialuna','Medialuna'],['chocotorta','Chocotorta'],['brownie','Brownie'],['alfajor','Alfajor'],['budin','Budín'],['tartaleta','Tartaleta'],['sandwich','Sándwich'],['fruta','Frutas'],['fiambres','Fiambres'],['queso','Queso'],['pan','Pan'],['galletitas','Galletitas'],['mate','Mate'],['yogur','Yogur'],['miel','Miel o dulce'],['regalo','Genérico']];
  modal(`${modalHead('MATERIAS PRIMAS',id?'Editar componente':'Nuevo componente')}<form id="ingredient-form"><div class="modal-body">
  ${field('Nombre del componente *','name',item.name,'text','required maxlength="80"')}
  <div class="form-row"><label class="form-field"><span>Unidad de medida</span><select name="unit">${['unidad','gramo','kilogramo','mililitro','litro','porción','paquete'].map(u=>`<option ${u===item.unit?'selected':''}>${u}</option>`).join('')}</select></label>${field('Costo para el negocio por unidad ($) *','cost',item.cost,'number','min="0" step="0.01" required')}</div>
  <label class="form-field"><span>Precio de venta por unidad ($)</span><input type="number" name="salePrice" min="0" step="0.01" placeholder="Ej.: 1800" value="${h(item.salePrice??'')}"><small>Este valor se mostrará al cliente y se sumará al desayuno. No es el costo del insumo.</small></label>
- <label class="switch-row"><input type="checkbox" name="availableForBuilder" ${item.availableForBuilder?'checked':''}> Mostrar en «Armá tu desayuno»</label>
+ <label class="form-field"><span>Dibujo de la bandeja</span><select name="illustration" id="ingredient-illustration">${art.map(([key,label])=>`<option value="${key}" ${item.illustration===key?'selected':''}>${label}</option>`).join('')}</select><small>Elegí un dibujo si querés uno específico. Si no, el sistema busca el más parecido por el nombre.</small></label>
+ <label class="switch-row"><input type="checkbox" name="availableForBuilder" ${item.availableForBuilder?'checked':''}> Mostrar en «Personalizar»</label>
  <label class="switch-row"><input type="checkbox" name="inStock" ${item.inStock?'checked':''}> En stock — se puede elegir</label>
  <div class="price-note">Si desmarcás «En stock» los clientes no podrán agregar ese componente. El stock es un estado manual: cada pedido no descuenta unidades automáticamente.</div>
  </div><div class="modal-foot"><button type="submit" class="admin-button">Guardar componente y publicar cambios</button></div></form>`);
  $('#ingredient-form').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const selling=f.get('salePrice');
  if(f.has('availableForBuilder') && selling===''){error('Para mostrarlo en la tienda, indicá un precio de venta.');return;}
- const updated={...item,id:id||slug(),name:String(f.get('name')||'').trim(),unit:String(f.get('unit')),cost:cleanMoney(f.get('cost')),salePrice:selling===''?null:cleanMoney(selling),availableForBuilder:f.has('availableForBuilder'),inStock:f.has('inStock')};
+ const updated={...item,id:id||slug(),name:String(f.get('name')||'').trim(),unit:String(f.get('unit')),cost:cleanMoney(f.get('cost')),salePrice:selling===''?null:cleanMoney(selling),availableForBuilder:f.has('availableForBuilder'),inStock:f.has('inStock'),illustration:String(f.get('illustration')||'')};
  if(!updated.name){error('Falta el nombre del insumo.');return;}
  if(id)priv.ingredients=priv.ingredients.map(i=>i.id===id?updated:i);else priv.ingredients.push(updated);
  if(await persist('private')){if(await publishBuilder()){closeModal();render();}}
