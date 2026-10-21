@@ -1188,3 +1188,92 @@ body.locked .social-dock{pointer-events:none;opacity:0}
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
   .admin-body #admin-login .login-photo:hover img{transform:scale(1.06)}
 }
+
+
+/* ===== Dulces 3.4 — Controles de carrito legibles y consistentes ===== */
+/* Los botones de cantidad tienen tamaño fijo; Eliminar necesita ancho propio. */
+.site-body .cart-row .cart-details .qty-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 9px;
+  row-gap: 10px;
+  min-width: 0;
+}
+.site-body .cart-row .qty-controls button[data-qty] {
+  flex: 0 0 36px;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 20px;
+  line-height: 1;
+}
+.site-body .cart-row .qty-controls span {
+  display: inline-block;
+  flex: 0 0 21px;
+  min-width: 21px;
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: center;
+}
+.site-body .cart-row .qty-controls button[data-remove] {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 96px;
+  max-width: 100%;
+  min-height: 36px;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 7px 15px;
+  border: 1px solid #edbec5;
+  border-radius: 11px;
+  box-sizing: border-box;
+  background: #fff0f1;
+  color: #9e4555;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+@media(hover:hover) {
+  .site-body .cart-row .qty-controls button[data-remove]:hover {
+    background: #fbdce2;
+    border-color: #d58b9c;
+  }
+}
+:root[data-theme="dark"] .site-body .cart-row .qty-controls button[data-remove] {
+  color: #ffe4ed!important;
+  background: #543744!important;
+  border-color: #896075!important;
+}
+:root[data-theme="dark"] .site-body .cart-row .qty-controls button[data-remove]:hover {
+  background: #694354!important;
+}
+:root[data-theme="dark"] .site-body .cart-row .qty-controls button[data-qty] {
+  color: #ffe4ed!important;
+  background: #49333f!important;
+  border-color: #806071!important;
+}
+.site-body .cart-row .qty-controls button:focus-visible,
+.site-body .builder-stepper button:focus-visible {
+  outline: 3px solid #f09da8;
+  outline-offset: 2px;
+}
+@media(max-width: 430px) {
+  .site-body .cart-items {padding-left: 13px;padding-right: 13px}
+  .site-body .cart-row {gap: 10px;padding: 11px}
+  .site-body .cart-row img {width: 67px;height: 73px;flex-shrink: 0}
+  .site-body .cart-row .qty-controls {gap: 8px}
+  .site-body .cart-row .qty-controls button[data-qty] {width: 34px;min-width: 34px;flex-basis: 34px;height: 34px}
+  .site-body .cart-row .qty-controls button[data-remove] {min-height: 34px;min-width: 92px}
+}
