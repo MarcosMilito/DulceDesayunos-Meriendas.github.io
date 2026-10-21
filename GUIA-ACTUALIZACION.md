@@ -1,35 +1,36 @@
-# Dulces Desayunos y Meriendas — Actualización 2.4
+# Actualización 2.5 — Dulces Desayunos y Meriendas
 
-## Qué corregimos
+## Qué cambió
 
-- **Nombre:** Dulces Desayunos y Meriendas en la tienda, el administrador y el texto del pedido.
-- **WhatsApp:** los artículos figuran sin numeración, por ejemplo «• Ricota — 1 unidad — $ 25.000».
-- **Dedicatoria y observaciones:** se guardan durante el formulario y aparecen en la vista previa y en el mensaje de WhatsApp. Si no se completaron, se indica expresamente que no se solicitó una dedicatoria o que no hay observaciones.
-- **Foto opcional:** se puede elegir y ver una vista previa. La pantalla de confirmación tiene **un único botón principal: «Compartir pedido»**. Abre el WhatsApp de atención **11 6574-4539** con el resumen escrito. Si se seleccionó una foto, el cliente debe **adjuntarla manualmente** en ese mismo chat. Los enlaces comunes de WhatsApp no permiten adjuntarla automáticamente.
-- **Volver:** hay controles visibles para regresar desde el carrito a la tienda, desde el formulario al carrito y desde la revisión final al formulario sin perder los datos ni la foto. También hay «Volver» en el detalle de productos y la ventana de novedades.
-- **Coordinación:** el aviso de disponibilidad, fecha, horario y pago permanece en la web antes de enviar; no se incorpora al mensaje de WhatsApp.
-- **Caché:** el HTML utiliza `?v=2.4.0` para los archivos CSS y JS y así evita cargar scripts antiguos.
+- Se retiró **totalmente** el selector de fotografías del formulario de compra y del mensaje.
+- Se conserva la dedicatoria y sus observaciones opcionales.
+- Se reemplazó «Ventas y gastos» por «Pedidos» en el menú del administrador.
+- Cada pedido del carrito se registra al pulsar «Compartir pedido», **antes** de ir a WhatsApp. En el panel verás su nombre, teléfono, domicilio, localidad, productos, total estimado, dedicatoria y observaciones; podés marcarlo como «Pagado» o «Pendiente de pago».
+- La vista general continúa mostrando ingresos, egresos estimados, resultado estimado y cantidad de pedidos pagados, combinando registros anteriores.
+- Podés registrar pedidos recibidos por fuera de la web con «Cargar pedido».
 
-## Cómo actualizar GitHub y Vercel
+## Cómo instalar sobre 2.4
 
-1. Descargá **Dulces_2_4_SOLO_ARCHIVOS_MODIFICADOS.zip** y descomprimilo.
-2. En tu repositorio **MarcosMilito/DulceDesayunos-Meriendas.github.io**, reemplazá los archivos conservando sus rutas:
-   - `index.html`
-   - `admin.html`
-   - `assets/site.js`
-   - `assets/styles.css`
-   - `assets/data.js`
-   - `assets/admin.js`
-3. Confirmá el commit en GitHub y esperá que Vercel termine el nuevo despliegue.
-4. Abrí tu sitio en una ventana privada. Verificá que `index.html` cargue `assets/site.js?v=2.4.0` y que el único botón final sea «Compartir pedido».
-5. Probá el carrito, la dedicatoria, las observaciones y la vuelta atrás desde el celular. **No hace falta enviar un pedido real** para revisar el mensaje.
+1. Hacé una copia de seguridad del repositorio de GitHub.
+2. Subí el contenido del ZIP **SOLO ARCHIVOS MODIFICADOS** al repositorio, respetando nombres y carpetas.
+3. **Conservá tu `config.js` existente**. No copies sobre él ninguna versión de ejemplo.
+4. En Supabase: **SQL Editor > New query**. Copiá todo `supabase/02-pedidos.sql`, ejecutalo una vez y comprobá que termine sin errores. Se debe ejecutar después del SQL 01 que ya usa el administrador.
+5. Esperá el deploy de Vercel y recargá el sitio. El código usa versión `2.5.0` para evitar archivos JavaScript cacheados.
+6. Desde la tienda hacé un pedido de prueba; al pulsar «Compartir pedido» se crea una solicitud, luego se abre WhatsApp. Abrí `tudominio/admin.html` y seleccioná **Pedidos** para verlo. La solicitud debe aparecer **Pendiente de pago**.
+7. Confirmá manualmente con el cliente por WhatsApp, cobrá y entonces pulsá **Marcar como pagado**.
 
-**No reemplaces `config.js`.** Contiene tus datos públicos de Supabase. Esta actualización no modifica el esquema de la base de datos ni requiere volver a ejecutar SQL. Tampoco borra los productos, ventas ni cambios de precios registrados.
+## Limitaciones importantes
 
-## Sobre la foto
+**El clic no prueba que se haya enviado el mensaje por WhatsApp.** Las solicitudes se registran antes de que se abra la aplicación. Tampoco significa que hayas aceptado el pedido. Comprobá disponibilidad y detalles con el cliente.
 
-La foto no se envía automáticamente a WhatsApp: el cliente debe adjuntarla dentro de la conversación. Esta restricción existe porque `https://wa.me/...` solamente admite texto precargado, no archivos binarios. No se almacena ni sube la fotografía a Supabase desde este proceso.
+En el modo demostración (sin Supabase), los pedidos se guardan en el almacenamiento del navegador y solo aparecen en el administrador **del mismo navegador y dispositivo**. Para centralizarlos desde distintos celulares es necesario Supabase y ejecutar el SQL 02.
 
-## Si seguís viendo «Dulce» o un formulario anterior
+Si configuraste Supabase pero todavía no corriste el SQL 02, el cliente recibirá un aviso y podrá elegir enviar el pedido por WhatsApp de todos modos. **Ese pedido no aparecerá automáticamente en el panel**: deberás crearlo a mano con «Cargar pedido».
 
-Casi siempre significa que se publicó una versión anterior o que el navegador conservó archivos en caché. Comprobá en Vercel que la rama y el último despliegue sean correctos. Abrí el sitio en una ventana privada o actualizá con Ctrl+F5. Si inspeccionás el código fuente, debería figurar `assets/site.js?v=2.4.0`. Reemplazar **solo** `site.js` pero no `index.html` puede dejar la versión antigua en caché.
+Los precios de solicitudes enviadas por visitantes no están validados por un servidor contra el catálogo: son **estimativos**, y el administrador debe verificarlos antes de confirmar o aceptar un pago. Los visitantes no pueden consultar los pedidos ajenos ni cambiar su estado de pago por la API pública, gracias a RLS.
+
+### Seguridad
+
+`config.js` debe contener únicamente URL y clave pública de Supabase; nunca agregues la *secret key*. Para un uso de alto volumen se recomienda añadir límites a envíos y un control antispam del lado del servidor.
+
+> Nota: la copia JSON del panel incluye una referencia de los pedidos, pero restaurar esa copia **no** reimporta pedidos a la tabla protegida de Supabase; los pedidos existentes permanecen allí.

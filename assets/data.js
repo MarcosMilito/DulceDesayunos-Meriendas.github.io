@@ -100,6 +100,35 @@ export async function savePrivate(data){
  const tok=await sessionToken();if(!tok)throw Error('Se cerró tu sesión.');
  await request('/rest/v1/private_data?id=eq.store',{method:'PATCH',body:{payload:data,updated_at:new Date().toISOString()},token:tok,extraHeaders:{Prefer:'return=minimal'}});
 }
+// Pedidos: la solicitud desde la tienda NO implica pago ni confirmación por WhatsApp.
+// En la nube, solamente administradores pueden leer o cambiar estados (políticas RLS del SQL 02).
+const KEY_ORDERS='dulces_2_5_customer_orders';
+export async function createCustomerOrder(order,{admin=false}={}){
+ const safe={...order, payment_status:'pendiente'};
+ if(!cloud()){
+  const list=localGet(KEY_ORDERS,()=>[]);
+  if(!list.some(o=>o.id===safe.id))list.unshift({...safe,created_at:new Date().toISOString()});
+  localSet(KEY_ORDERS,list);return true;
+ }
+ const token=admin?await sessionToken():null;
+ await request('/rest/v1/customer_orders',{method:'POST',token,body:safe,extraHeaders:{Prefer:'return=minimal'}});
+ return true;
+}
+export async function loadCustomerOrders(){
+ if(!cloud())return localGet(KEY_ORDERS,()=>[]);
+ const token=await sessionToken();if(!token)throw Error('Tenés que iniciar sesión para ver los pedidos.');
+ return await request('/rest/v1/customer_orders?select=*&order=created_at.desc&limit=500',{token});
+}
+export async function updateCustomerOrderPayment(id,paid){
+ const status=paid?'pagado':'pendiente';
+ if(!cloud()){
+  const list=localGet(KEY_ORDERS,()=>[]),order=list.find(o=>o.id===id);
+  if(!order)throw Error('El pedido no existe.');order.payment_status=status;localSet(KEY_ORDERS,list);return true;
+ }
+ const token=await sessionToken();if(!token)throw Error('Tenés que iniciar sesión.');
+ await request(`/rest/v1/customer_orders?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',token,body:{payment_status:status},extraHeaders:{Prefer:'return=minimal'}});
+ return true;
+}
 export function getCart(){return localGet(KEY_CART,()=>[])}
 export function setCart(cart){localSet(KEY_CART,cart);window.dispatchEvent(new CustomEvent('cart-updated'))}
 export function promoFor(p,store){return store.promos?.find(x=>x.active && x.productId===p.id && Number(x.price)>=0)}
