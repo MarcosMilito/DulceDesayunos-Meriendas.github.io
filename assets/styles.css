@@ -584,3 +584,111 @@ body.locked .social-dock{pointer-events:none;opacity:0}
   .admin-table td,.admin-table td strong{font-size:13px}
   .admin-table th{font-size:11px}
 }
+
+
+/* Dulces 2.8 — Segunda mejora sutil de legibilidad.
+   Partimos de la versión 2.7. Conservamos títulos grandes, tamaños de tarjetas,
+   colores, grillas, imágenes y modo oscuro; incrementamos textos pequeños ~1-2px. */
+
+/* Navegación, ayuda y encabezados secundarios */
+.announcement{font-size:13px}
+.brand-words small{font-size:10px}
+.header-nav a{font-size:15px}
+.header-cart{font-size:14px}
+.cart-count{font-size:13px}
+.eyebrow,.kicker,.light-eyebrow{font-size:13px}
+.hero-copy>p{font-size:18px}
+.hero-proof p,.benefit-inner>div{font-size:14px}
+.btn{font-size:15px}
+.section-heading>p{font-size:16px}
+.category-card small,.category-card div>span{font-size:15px}
+
+/* Productos, descuentos, promociones y textos de contenido */
+.filter-tabs button{font-size:14.5px}
+.product-total{font-size:14px}
+.product-badge,.product-category{font-size:12px}
+.product-description{font-size:15px;line-height:1.65}
+.old-price{font-size:14px}
+.small-button{font-size:13.5px}
+.custom-copy p{font-size:16px}
+.promo-card p,.promo-empty p{font-size:15px}
+.promo-card .btn{font-size:13.5px}
+.news-copy p,.feature-news-content p{font-size:16px}
+.step p,.contact-card p,.contact-card a{font-size:15px}
+.contact-section p{font-size:16px}
+.footer-inner p,.footer-inner>a:last-child{font-size:14px}
+.shop-news-copy small,.shop-news-copy>span{font-size:13px}
+.shop-news-copy p{font-size:15px}
+.product-contents ul{font-size:15px}
+
+/* Redes sociales y botones de apariencia */
+.social-link,.contact-card .social-link{font-size:14px!important}
+.hero-social-links .social-link{font-size:13px!important}
+.hero-social-label,.social-intro,.dock-caption{font-size:13.5px}
+.theme-toggle{font-size:14px}
+.theme-toggle-text{font-size:13px}
+
+/* Carrito y checkout */
+.drawer-head small,.modal-top small{font-size:12px}
+.cart-row small{font-size:13px}
+.cart-row .cart-details>strong{font-size:16px}
+.qty-controls span,.text-link{font-size:14px}
+.cart-footer>small,.total-line small{font-size:13px}
+.form-field>span{font-size:14.5px}
+.form-field input,.form-field select,.form-field textarea,.admin-input{font-size:16px}
+.form-help,.small-muted,.confirm-help{font-size:14px}
+.checkout-intro,.confirm-message-intro{font-size:15px}
+.toggle-option strong{font-size:15px}
+.toggle-option small{font-size:13px}
+.price-note{font-size:14px}
+.gift-options-heading small,.dedication-help,.dedication-observations>small{font-size:13px}
+.gift-review strong,.gift-review p{font-size:14.5px}
+.coordination-notice p{font-size:15px}
+.order-message{font-size:15px;line-height:1.65}
+.order-save-warning{font-size:14px}
+.modal-back,.drawer-back,.news-back{font-size:14px}
+.toast,.notice-banner{font-size:14px}
+
+/* Administrador, tablas e indicadores */
+.login-card>p{font-size:16px}
+.login-help{font-size:14px}
+.admin-menu-caption{font-size:12.5px}
+.admin-nav button{font-size:14.5px}
+.admin-side-bottom a,.admin-side-bottom button{font-size:14.5px}
+.admin-top p,.admin-page-header p{font-size:15px}
+.admin-user{font-size:14px}
+.admin-button{font-size:14.5px}
+.metric small,.metric p{font-size:13px}
+.admin-table th{font-size:12.5px}
+.admin-table td,.admin-table td strong{font-size:14.5px}
+.admin-table td small{font-size:13px}
+.badge-status,.pill{font-size:12.5px}
+.row-actions button{font-size:13.5px}
+.admin-tip,.admin-notice,.admin-filter,.recipe-empty,.success-box,.error-box{font-size:15px}
+.admin-list-entry strong{font-size:15.5px}
+.admin-list-entry p,.hint,.inline-note{font-size:14px}
+.recipe-line,.recipe-line strong,.switch-row,.tiny-input{font-size:14.5px}
+.admin-news-card p{font-size:14px}
+.bar-group{font-size:12.5px}
+.data-footer{font-size:13px}
+.order-card-top small,.order-card-top p,.order-card-bottom small,.order-mini small{font-size:14px}
+.order-pay,.order-unpay,.order-mini{font-size:14.5px}
+.order-detail p,.order-detail-line{font-size:15px}
+
+/* Celular: más lectura, sin cambiar el tamaño de la portada ni de las tarjetas. */
+@media(max-width:620px){
+  .brand-words small,.admin-mobile-top .brand-words small{font-size:8px}
+  .hero-copy>p{font-size:15.5px}
+  .btn{font-size:14.5px}
+  .filter-tabs button{font-size:14px}
+  .product-description{font-size:15px;min-height:auto}
+  .small-button{font-size:13px}
+  .product-actions .small-button{white-space:normal;line-height:1.35;text-align:center}
+  .hero-social-links .social-link{font-size:13px!important}
+  .social-link-name,.dock-caption{font-size:12.5px}
+  .theme-toggle-text{font-size:12px}
+  .admin-page-header p,.admin-top p{font-size:14.5px}
+  .admin-nav button{font-size:15px}
+  .admin-table td,.admin-table td strong{font-size:14px}
+  .admin-table th{font-size:12px}
+}
