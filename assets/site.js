@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.1.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.2.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -44,7 +44,7 @@ function renderContact(){
  if(facebook && /^https:\/\/(?:www\.)?facebook\.com\//i.test(facebook))socials.push({kind:'facebook',name:'Facebook',href:facebook});
  const linkHtml=(s,compact=false)=>`<a class="social-link social-${s.kind}${compact?' social-icon-only':''}" href="${h(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${s.name} de Dulces Desayunos y Meriendas en una pestaña nueva" title="${s.name}"><span class="social-link-icon">${socialIcon(s.kind)}</span>${compact?'':`<span class="social-link-name">${s.name}</span>`}</a>`;
  // El menú superior se mantiene despejado; los accesos sociales siguen en el dock y contacto.
- $('#hero-socials').innerHTML=`<span class="hero-social-label">Seguinos y encontranos en</span><div class="hero-social-links">${socials.map(s=>linkHtml(s)).join('')}</div>`;
+ 
  $('#social-links').innerHTML=socials.map(s=>linkHtml(s)).join('');
  $('#social-dock').innerHTML=`<span class="dock-caption">¡Hablemos!</span>${socials.map(s=>linkHtml(s,true)).join('')}`;
 }
@@ -70,7 +70,7 @@ function builderChoiceHTML(i){
  return `<div class="builder-item ${enabled?'':'not-available'} ${selected?'is-selected':''}">
  <img class="builder-item-thumb" src="${builderImage(i)}" alt="" loading="lazy">
  <div class="builder-item-info"><span class="builder-stock ${enabled?'':'out'}">${enabled?'● Disponible':'○ Agotado'}</span><strong>${h(i.name)}</strong><small>${h(i.unit||'unidad')}</small><b>${money(i.price)} <span>/ ${h(i.unit||'unidad')}</span></b></div>
- <div class="builder-stepper"><button type="button" class="builder-decrease" data-builder-step="${h(i.id)}" data-delta="-1" ${!enabled||!selected?'disabled':''} aria-label="Quitar ${h(i.name)}">−</button><output aria-label="Cantidad de ${h(i.name)}">${selected}</output><button type="button" class="builder-increase" data-builder-step="${h(i.id)}" data-delta="1" ${!enabled||selected>=20?'disabled':''} aria-label="Agregar ${h(i.name)}">${selected?'＋':'＋ Agregar'}</button></div></div>`;
+ <div class="builder-stepper"><button type="button" class="builder-decrease" data-builder-step="${h(i.id)}" data-delta="-1" ${!enabled||!selected?'disabled':''} aria-label="Quitar ${h(i.name)}">−</button><output aria-label="Cantidad de ${h(i.name)}">${selected}</output><button type="button" class="builder-increase" data-builder-step="${h(i.id)}" data-delta="1" ${!enabled||selected>=20?'disabled':''} aria-label="Agregar ${h(i.name)}"><span aria-hidden="true">＋</span><span>${selected?'Sumar':'Agregar'}</span></button></div></div>`;
 }
 function renderBuilder(){
  const items=publishedBuilder();const grid=$('#builder-products');if(!grid)return;
@@ -78,18 +78,6 @@ function renderBuilder(){
  grid.innerHTML=sorted.length?sorted.map(builderChoiceHTML).join(''):'<div class="builder-empty"><strong>Pronto vas a poder armar tu bandeja ♡</strong><p>Estamos preparando la lista de ingredientes. Consultanos por WhatsApp si querés un desayuno especial.</p></div>';
  const chosen=items.filter(i=>i.inStock===true&&(selectedBuilder.get(i.id)||0)>0);
  const total=chosen.reduce((n,i)=>n+Number(i.price)*selectedBuilder.get(i.id),0);
- const visual=[];
- chosen.forEach(i=>{
-  const count=selectedBuilder.get(i.id)||0;
-  // Se dibuja cada unidad para cantidades pequeñas. Para cantidades en gramos, se representa como una pieza ilustrativa y un contador.
-  const discrete=!/gramo|kilogramo|mililitro|litro|paquete/i.test(i.unit||'unidad');
-  const repeats=discrete?Math.min(count,8):1;
-  for(let n=0;n<repeats;n++) visual.push({item:i,remaining:discrete&&n===repeats-1&&count>8?count-7:0,label:!discrete?`${count} ${i.unit}`:''});
- });
- const scene=$('#builder-preview');
- if(scene){
-  scene.innerHTML=`<div class="tray-preview-heading"><span>Vista de tu bandeja</span><small>${chosen.length?'Se actualiza al agregar':'Empezá a personalizar'}</small></div><div class="tray-board"><div class="tray-board-inner">${visual.length?visual.map(({item,remaining,label},index)=>`<div class="tray-piece" style="--piece-order:${index%6}" title="${h(item.name)}${label?` · ${h(label)}`:''}"><img src="${builderImage(item)}" alt="${h(item.name)}" draggable="false">${remaining?`<span class="tray-piece-count">+${remaining}</span>`:''}${label?`<span class="tray-piece-count">${h(label)}</span>`:''}</div>`).join(''):'<div class="tray-board-empty"><span>♡</span><p>Tu bandeja empieza acá</p></div>'}</div></div><p class="tray-preview-footnote">Vista ilustrativa · La presentación real puede variar</p>`;
- }
  $('#builder-selections').innerHTML=chosen.length?chosen.map(i=>`<div><span>${h(i.name)} × ${selectedBuilder.get(i.id)}</span><strong>${money(Number(i.price)*selectedBuilder.get(i.id))}</strong></div>`).join(''):'<p class="builder-placeholder">Tu bandeja está esperando sus primeros ingredientes. ♡</p>';
  $('#builder-total-price').textContent=money(total);$('#builder-add').disabled=!chosen.length||total<=0;
 }
