@@ -5,7 +5,7 @@ export const zonePrices = [['Lomas de Zamora', 0], ['Banfield centro', 0], ['Vil
 export const zoneNames = zonePrices.map(([name])=>name);
 export const defaults = {
   public: {
-    brandVersion: 3,
+    brandVersion: 4,
     products: [
       {id:'picada',name:'Picada',category:'picadas',price:26000,description:'Una selección para compartir: fiambres, quesos, aceitunas, tomates cherry, panes y mucho sabor.',image:'assets/img/picada.jpeg',badge:'Para compartir',featured:true,customizable:false,alsoMerienda:false,active:true},
       {id:'ricota',name:'Ricota',category:'desayunos',price:25000,description:'Una bandeja dulce con medialunas, budín, tartaletas, galletitas, jugo e infusión.',image:'assets/img/ricota.jpeg',badge:'Bien dulce',featured:false,customizable:true,alsoMerienda:true,active:true},
@@ -18,7 +18,7 @@ export const defaults = {
     news:[{id:'bienvenida',title:'¡Los momentos lindos se comparten!',subtitle:'Desayunos, meriendas y picadas hechas para sorprender. Elegí tu favorito y armemos algo especial.',image:'assets/img/premium.jpeg',active:true,duration:15,eyebrow:'Una dulce novedad'}],
     shipping:zonePrices.map(([name,price])=>({name,price,enabled:true})),
     addons:[{id:'tarjeta',name:'Tarjeta con dedicatoria',price:0,enabled:true},{id:'taza',name:'Taza personalizada',price:null,enabled:true},{id:'jugo',name:'Jugo adicional',price:null,enabled:true},{id:'medialunas',name:'Medialunas extra',price:null,enabled:true},{id:'dulces',name:'Algo dulce extra',price:null,enabled:true}],
-    settings:{businessName:'Dulce Desayunos y Meriendas',headline:'Hacemos que cada momento sea un poquito más dulce.',subheadline:'Desayunos, meriendas y picadas llenos de cariño. Elegí tu favorito y regalá una sonrisa.',whatsapp:'5491165744539',instagram:'https://www.instagram.com/dulcesdesayunosy?xtok=b240eTFxaWZ2N2t6',facebook:'https://www.facebook.com/share/19ioXKnjUQ/',contactEmail:'',deliveryNote:'Envíos a Zona Sur · Consultá las tarifas antes de confirmar tu pedido.'}
+    settings:{businessName:'Dulces Desayunos y Meriendas',headline:'Hacemos que cada momento sea un poquito más dulce.',subheadline:'Desayunos, meriendas y picadas llenos de cariño. Elegí tu favorito y regalá una sonrisa.',whatsapp:'5491165744539',instagram:'https://www.instagram.com/dulcesdesayunosy?xtok=b240eTFxaWZ2N2t6',facebook:'https://www.facebook.com/share/19ioXKnjUQ/',contactEmail:'',deliveryNote:'Envíos a Zona Sur · Consultá las tarifas antes de confirmar tu pedido.'}
   },
   private: {
     ingredients:[
@@ -30,15 +30,19 @@ export const defaults = {
 };
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 export const initialPublic = () => clone(defaults.public);
-// Migration V3: applies new brand, contacts and shipping to existing stores once.
-// Preserves user-created products, promotions, news, costs and orders.
+// Migración de marca: solo corrige el nombre, sin tocar productos, envíos, promociones ni ventas.
+// Se conserva la migración 2.1 de tarifas para instalaciones anteriores.
 export function upgradePublic(store){
  if(!store || typeof store !== 'object') return initialPublic();
- if(Number(store.brandVersion||0)>=3) return store;
  const next = clone(store);
- next.settings = {...(next.settings||{}),...defaults.public.settings};
- next.shipping = clone(defaults.public.shipping);
- next.brandVersion = 3;
+ if(Number(next.brandVersion||0)<3){
+  next.settings = {...(next.settings||{}),...defaults.public.settings};
+  next.shipping = clone(defaults.public.shipping);
+ }
+ if(Number(next.brandVersion||0)<4){
+  next.settings = {...(next.settings||{}),businessName:'Dulces Desayunos y Meriendas'};
+  next.brandVersion = 4;
+ }
  return next;
 }
 

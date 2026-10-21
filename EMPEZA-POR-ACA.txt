@@ -1,6 +1,11 @@
-DULCE DESAYUNOS Y MERIENDAS 2.2
+DULCES DESAYUNOS Y MERIENDAS · ACTUALIZACIÓN 2.3
 
-Para actualizar la web que ya tenes, elegi el ZIP SOLO_ARCHIVOS_MODIFICADOS y lee GUIA-ACTUALIZACION.md.
-No reemplaces config.js.
+Si ya tenés la versión 2.2 publicada, utilizá el ZIP de SOLO ARCHIVOS MODIFICADOS.
+Leé la GUIA-ACTUALIZACION.md antes de subir los archivos a GitHub.
 
-La foto opcional se comparte por WhatsApp en un segundo paso; no se carga automaticamente.
+NO REEMPLACES config.js, no borres productos y no reinicialices Supabase.
+
+Cambios: nombre corregido, productos sin numeración en WhatsApp,
+observaciones de la dedicatoria y opción de compartir foto + resumen en celulares compatibles.
+
+IMPORTANTE: el comprador siempre debe revisar y confirmar el envío desde WhatsApp.

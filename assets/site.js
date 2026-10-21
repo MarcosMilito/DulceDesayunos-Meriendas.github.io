@@ -13,7 +13,7 @@ function renderProducts(){
  $('#product-total').textContent=`${visible.length} ${visible.length===1?'producto':'productos'}`;
  $('#product-grid').innerHTML=visible.length?visible.map(p=>{
   const promo=promoFor(p,store), price=productPrice(p,store);
-  return `<article class="product-card"><div class="product-picture"><img loading="lazy" src="${h(img(p.image))}" alt="${h(p.name)} de Dulce"><span class="product-badge">${h(promo?'Promo especial':p.badge||'Hecho con amor')}</span><button class="picture-heart" title="Ver producto" data-detail="${h(p.id)}" aria-label="Ver detalle de ${h(p.name)}">♡</button></div><div class="product-content"><span class="product-category">${p.category==='picadas'?'Para compartir':filter==='meriendas'?'Meriendas':'Desayunos'}</span><h3>${h(p.name)}</h3><p class="product-description">${h(p.description)}</p><div class="price-row"><strong>${money(price)}</strong>${promo?`<span class="old-price">${money(p.price)}</span>`:''}</div><div class="product-actions"><button class="small-button primary" data-add="${h(p.id)}">+ Agregar al pedido</button><button class="small-button secondary" data-detail="${h(p.id)}">Ver detalle ↗</button></div></div></article>`
+  return `<article class="product-card"><div class="product-picture"><img loading="lazy" src="${h(img(p.image))}" alt="${h(p.name)} de Dulces"><span class="product-badge">${h(promo?'Promo especial':p.badge||'Hecho con amor')}</span><button class="picture-heart" title="Ver producto" data-detail="${h(p.id)}" aria-label="Ver detalle de ${h(p.name)}">♡</button></div><div class="product-content"><span class="product-category">${p.category==='picadas'?'Para compartir':filter==='meriendas'?'Meriendas':'Desayunos'}</span><h3>${h(p.name)}</h3><p class="product-description">${h(p.description)}</p><div class="price-row"><strong>${money(price)}</strong>${promo?`<span class="old-price">${money(p.price)}</span>`:''}</div><div class="product-actions"><button class="small-button primary" data-add="${h(p.id)}">+ Agregar al pedido</button><button class="small-button secondary" data-detail="${h(p.id)}">Ver detalle ↗</button></div></div></article>`
  }).join(''):'<div class="empty-state">Todavía no hay productos en esta categoría. Podés ver todo el catálogo o consultar por WhatsApp.<br><br><button class="btn btn-primary" data-show-all>Ver todos los productos</button></div>';
 }
 function renderPromos(){const promotions=(store.promos||[]).filter(x=>x.active && pById(x.productId)?.active!==false && pById(x.productId));
@@ -33,14 +33,14 @@ function renderContact(){
  $('#hero-subtitle').textContent=store.settings?.subheadline||initialPublic().settings.subheadline;
  $('#delivery-note').textContent=store.settings?.deliveryNote||'Envíos a Zona Sur · Consultar disponibilidad y costo';
  const phone=(store.settings?.whatsapp||'5491165744539').replace(/\D/g,'');
- const whatsappUrl=`https://wa.me/${phone||'5491165744539'}?text=${encodeURIComponent('¡Hola! Quisiera hacer una consulta a Dulce Desayunos y Meriendas.')}`;
+ const whatsappUrl=`https://wa.me/${phone||'5491165744539'}?text=${encodeURIComponent('¡Hola! Quisiera hacer una consulta a Dulces Desayunos y Meriendas.')}`;
  const link=$('#whatsapp-contact');link.href=whatsappUrl;link.target='_blank';link.rel='noopener noreferrer';
  const socials=[{kind:'whatsapp',name:'WhatsApp',href:whatsappUrl}];
  const instagram=store.settings?.instagram;
  const facebook=store.settings?.facebook;
  if(instagram)socials.push({kind:'instagram',name:'Instagram',href:socialUrl(instagram)});
  if(facebook && /^https:\/\/(?:www\.)?facebook\.com\//i.test(facebook))socials.push({kind:'facebook',name:'Facebook',href:facebook});
- const linkHtml=(s,compact=false)=>`<a class="social-link social-${s.kind}${compact?' social-icon-only':''}" href="${h(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${s.name} de Dulce Desayunos y Meriendas en una pestaña nueva" title="${s.name}"><span class="social-link-icon">${socialIcon(s.kind)}</span>${compact?'':`<span class="social-link-name">${s.name}</span>`}</a>`;
+ const linkHtml=(s,compact=false)=>`<a class="social-link social-${s.kind}${compact?' social-icon-only':''}" href="${h(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${s.name} de Dulces Desayunos y Meriendas en una pestaña nueva" title="${s.name}"><span class="social-link-icon">${socialIcon(s.kind)}</span>${compact?'':`<span class="social-link-name">${s.name}</span>`}</a>`;
  $('#header-socials').innerHTML=socials.map(s=>linkHtml(s,true)).join('');
  $('#hero-socials').innerHTML=`<span class="hero-social-label">Seguinos y encontranos en</span><div class="hero-social-links">${socials.map(s=>linkHtml(s)).join('')}</div>`;
  $('#social-links').innerHTML=socials.map(s=>linkHtml(s)).join('');
@@ -80,10 +80,11 @@ function beginCheckout(){
   <div class="gift-options"><div class="gift-options-heading"><span class="gift-heart" aria-hidden="true">♡</span><div><strong>Hacé tu regalo más especial</strong><small>Opcional · preparado con cariño</small></div></div>
    <label class="form-field" for="checkout-dedication"><span>Escribí tu dedicatoria (opcional)</span><textarea id="checkout-dedication" name="dedication" maxlength="600" rows="4" placeholder="Escribí acá el mensaje que querés que imprimamos y acompañe tu regalo…"></textarea></label>
    <div class="dedication-help"><span>La imprimimos tal como la escribas.</span><span id="dedication-count">0 / 600</span></div>
+   <label class="form-field dedication-observations" for="checkout-dedication-notes"><span>¿Tenés alguna preferencia especial para la dedicatoria?</span><textarea id="checkout-dedication-notes" name="dedicationNotes" maxlength="450" rows="3" placeholder="Observaciones (opcional): tipo de letra, colores, diseño de la tarjeta, ubicación de la foto…"></textarea><small>Solo si querés indicarnos cómo preparar la dedicatoria. Los detalles de entrega se coordinan por WhatsApp.</small></label>
    <label for="checkout-photo" class="photo-picker"><span class="photo-picker-icon" aria-hidden="true">▧</span><span><strong>Elegir una foto especial (opcional)</strong><small>JPG, PNG o WEBP · hasta 8 MB</small></span><span class="photo-picker-action">Seleccionar</span></label>
    <input class="visually-hidden-photo" type="file" name="photo" id="checkout-photo" accept="image/jpeg,image/png,image/webp">
    <div id="photo-preview" class="photo-preview" aria-live="polite" hidden></div>
-   <p class="photo-help">La foto no se carga automáticamente a WhatsApp: después de enviar el pedido podrás compartirla en el mismo chat.</p>
+   <p class="photo-help">Desde celulares compatibles vas a poder compartir la foto junto con el pedido. Si no, podrás abrir el WhatsApp del negocio y adjuntarla en la conversación.</p>
   </div>
   <div class="total-line"><span>Productos <small>${cart.reduce((x,i)=>x+i.qty,0)} unidad/es</small></span><strong>${money(cartSum())}</strong></div>
   <p class="small-muted">${cartNeedsQuote()?'Algunos extras requieren cotización. ':''}El importe y la disponibilidad finales se confirman directamente por WhatsApp.</p>
@@ -109,32 +110,42 @@ function beginCheckout(){
   const z=zones.find(x=>x.name===o.locality);
   if(!z){toast('Seleccioná una localidad de entrega.');return;}
   const dedication=String(o.dedication||'').trim();
-  const lines=cart.map((it,index)=>{
+  const dedicationNotes=String(o.dedicationNotes||'').trim();
+  const lines=cart.map(it=>{
    const p=pById(it.id);
-   return `${index+1}. ${p?.name||'Producto'} × ${it.qty} — ${money(itemCost(it)*it.qty)}${it.extras?.length?`\n   Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n   Dedicatoria del producto: ${it.message}`:''}`;
+   const units=`${it.qty} ${it.qty===1?'unidad':'unidades'}`;
+   return `• ${p?.name||'Producto'} × ${units} — ${money(itemCost(it)*it.qty)}${it.extras?.length?`\n  Extras: ${it.extras.map(x=>x.name+(x.price==null?' (a cotizar)':'')).join(', ')}`:''}${it.message?`\n  Dedicatoria del producto: ${it.message}`:''}`;
   }).join('\n');
-  const message=`¡Hola! Quisiera realizar el siguiente pedido en *Dulce Desayunos y Meriendas*:\n\n*PRODUCTOS*\n${lines}\n\n*RESUMEN DE IMPORTES*\nSubtotal: ${money(cartSum())}\nEnvío: ${z.price==null?'A confirmar':z.price===0?'Sin cargo':money(z.price)}\n${z.price!=null?`Total estimado: ${money(cartSum()+Number(z.price))}\n`:''}${cartNeedsQuote()?'Algunos adicionales requieren cotización.\n':''}\n*DATOS PARA LA ENTREGA*\nNombre: ${o.name}\nWhatsApp: ${o.phone}\nDirección: ${o.address}\nLocalidad: ${o.locality}${dedication?`\n\n*DEDICATORIA PARA IMPRIMIR*\n${dedication}`:''}${photo?'\n\n*FOTO PARA IMPRIMIR*\nVoy a adjuntar una foto en este chat.':''}\n\nMuchas gracias. Quedo a la espera de la confirmación del pedido.`;
+  const message=`¡Hola! Quisiera realizar el siguiente pedido en *Dulces Desayunos y Meriendas*:\n\n*PRODUCTOS*\n${lines}\n\n*RESUMEN DE IMPORTES*\nSubtotal: ${money(cartSum())}\nEnvío: ${z.price==null?'A confirmar':z.price===0?'Sin cargo':money(z.price)}\n${z.price!=null?`Total estimado: ${money(cartSum()+Number(z.price))}\n`:''}${cartNeedsQuote()?'Algunos adicionales requieren cotización.\n':''}\n*DATOS PARA LA ENTREGA*\nNombre: ${o.name}\nWhatsApp: ${o.phone}\nDirección: ${o.address}\nLocalidad: ${o.locality}${dedication?`\n\n*DEDICATORIA PARA IMPRIMIR*\n${dedication}`:''}${dedicationNotes?`\n\n*OBSERVACIONES DE LA DEDICATORIA*\n${dedicationNotes}`:''}${photo?'\n\n*FOTO PARA IMPRIMIR*\nElegí una foto para acompañar el pedido. La compartiré en esta conversación.':''}\n\nMuchas gracias. Quedo a la espera de la confirmación del pedido.`;
   const phone=(store.settings?.whatsapp||'5491165744539').replace(/\D/g,'');
-  const photoHtml=photo?`<div class="confirm-photo"><img src="${photoPreviewUrl}" alt="Foto seleccionada para el regalo"><div><strong>Tenés una foto para enviar</strong><p>Después de enviar el pedido, volvé a esta pantalla para compartir la foto en el mismo chat.</p></div></div>`:'';
+  const canSharePhoto=Boolean(photo&&navigator.share&&navigator.canShare?.({files:[photo]}));
+  const photoHtml=photo?`<div class="confirm-photo"><img src="${photoPreviewUrl}" alt="Foto seleccionada para el regalo"><div><strong>Foto elegida: ${h(photo.name)}</strong><p>${canSharePhoto?'Podés intentar compartir esta foto y el resumen juntos con el menú de tu celular.':'Tu dispositivo requiere adjuntar la foto desde WhatsApp o usar la opción de compartir archivos, si está disponible.'}</p></div></div>`:'';
   modal(`${head('ÚLTIMO PASO ♡','Revisá y enviá tu pedido')}
-    <div class="modal-body"><div class="coordination-notice" role="note"><span class="coordination-icon" aria-hidden="true">ⓘ</span><div><strong>Coordinación y confirmación del pedido</strong><p>La fecha, el horario de entrega, el medio de pago y cualquier observación se acordarán directamente por WhatsApp con las personas responsables de Dulce Desayunos y Meriendas. <b>Todos los pedidos están sujetos a disponibilidad y confirmación.</b></p></div></div>
-    <p class="confirm-message-intro">Este es el mensaje que se enviará a WhatsApp. Podés revisarlo antes de continuar:</p><label class="form-field"><span>Resumen de tu pedido</span><textarea id="order-message" class="order-message" readonly>${h(message)}</textarea></label>${photoHtml}
-    <p class="confirm-help">Al pulsar “Abrir WhatsApp”, se abrirá una conversación con el negocio. El pedido se confirma cuando recibas nuestra respuesta.</p></div>
-    <div class="modal-foot confirm-actions"><button class="btn btn-soft" id="copy-order">Copiar resumen</button><button class="btn btn-primary btn-full" id="send-whatsapp">Abrir WhatsApp y enviar ↗</button></div>
-    ${photo?`<div class="photo-share-footer"><span>Después, enviá la foto en ese mismo chat:</span><button class="btn btn-soft" id="share-order-photo">Compartir mi foto ↗</button><p id="share-photo-help">En el celular, elegí WhatsApp y la conversación con el negocio. Si no aparece esa opción, adjuntá la foto manualmente desde el chat.</p></div>`:''}`,{large:true});
+    <div class="modal-body"><div class="coordination-notice" role="note"><span class="coordination-icon" aria-hidden="true">ⓘ</span><div><strong>Coordinación y confirmación del pedido</strong><p>La fecha, el horario de entrega, el medio de pago y cualquier observación se acordarán directamente por WhatsApp con las personas responsables de Dulces Desayunos y Meriendas. <b>Todos los pedidos están sujetos a disponibilidad y confirmación.</b></p></div></div>
+    <p class="confirm-message-intro">Revisá los productos, el importe y los datos que vamos a recibir:</p><label class="form-field"><span>Resumen de tu pedido</span><textarea id="order-message" class="order-message" readonly>${h(message)}</textarea></label>${photoHtml}
+    ${photo?`<div class="photo-delivery-note" role="note"><strong>♡ ¿Cómo enviamos tu foto?</strong><p>${canSharePhoto?'Tocá «Compartir pedido y foto», elegí WhatsApp en tu celular y seleccioná el chat del negocio (11 6574-4539). <b>Comprobá que se incluyan tanto el texto como la imagen antes de enviarlos.</b>':'Abrí el WhatsApp del negocio con el pedido completo y adjuntá la fotografía desde ese mismo chat con el ícono de adjuntar.'}</p><p>Por limitaciones de WhatsApp, la web no puede adjuntar archivos automáticamente al número del negocio ni enviar dos mensajes sin tu intervención.</p></div>`:''}
+    <p class="confirm-help">El pedido solo queda confirmado cuando el negocio te responde por WhatsApp.</p></div>
+    <div class="modal-foot confirm-actions"><button class="btn btn-soft" id="copy-order">Copiar resumen</button>${canSharePhoto?`<button class="btn btn-primary btn-full" id="share-complete-order">Compartir pedido y foto ↗</button>`:`<button class="btn btn-primary btn-full" id="send-whatsapp">Abrir WhatsApp y enviar ↗</button>`}</div>
+    ${photo?`<div class="photo-share-footer">${canSharePhoto?`<button class="btn btn-soft" id="send-whatsapp">O enviá el pedido directamente al WhatsApp del negocio</button>`:''}<button class="btn btn-soft" id="share-order-photo">Compartir solo la foto ↗</button><p>Si el celular no comparte ambos juntos, enviá el texto con la opción directa y después adjuntá la foto al mismo chat.</p></div>`:''}`,{large:true});
   $('#copy-order').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#order-message').value);toast('Resumen copiado ♡')}catch{$('#order-message').select();toast('Seleccioná y copiá el resumen para enviarlo.')}});
-  $('#send-whatsapp').addEventListener('click',()=>{window.open(`https://wa.me/${phone}?text=${encodeURIComponent($('#order-message').value)}`,'_blank','noopener,noreferrer');toast(photo?'Cuando termines, enviá también la foto en el mismo chat.':'Terminá de enviar el pedido por WhatsApp. ¡Gracias!')});
+  $('#send-whatsapp')?.addEventListener('click',()=>{window.open(`https://wa.me/${phone}?text=${encodeURIComponent($('#order-message').value)}`,'_blank','noopener,noreferrer');toast(photo?'Revisá el pedido y adjuntá tu foto en el mismo chat si todavía no la compartiste.':'Revisá el pedido antes de enviarlo. ¡Gracias!')});
+  $('#share-complete-order')?.addEventListener('click',async()=>{
+   try{
+    await navigator.share({files:[photo],text:$('#order-message').value,title:'Pedido con foto · Dulces Desayunos y Meriendas'});
+    toast('Revisá que en WhatsApp se hayan compartido el resumen y la foto.');
+   }catch(err){if(err?.name!=='AbortError')toast('No se pudo compartir todo junto. Usá el envío directo y adjuntá la foto en el chat.');}
+  });
   if(photo){$('#share-order-photo').addEventListener('click',async()=>{
-    try{
-      if(navigator.canShare?.({files:[photo]}) && navigator.share){await navigator.share({files:[photo],title:'Foto para mi pedido · Dulce Desayunos y Meriendas'});toast('Verificá que la foto se haya enviado a la conversación correcta.');}
-      else{toast('Adjuntá la foto desde el chat de WhatsApp con el botón de archivos o fotos.');}
-    }catch(err){if(err?.name!=='AbortError')toast('No fue posible compartirla. Adjuntala directamente en WhatsApp.');}
-  })}
+   try{
+    if(navigator.canShare?.({files:[photo]}) && navigator.share){await navigator.share({files:[photo],title:'Foto del pedido · Dulces Desayunos y Meriendas'});toast('Comprobá que compartiste la foto al chat correcto.');}
+    else{toast('Adjuntá la foto desde el chat de WhatsApp, con el botón de archivos o fotos.');}
+   }catch(err){if(err?.name!=='AbortError')toast('No fue posible compartirla. Adjuntala directamente en WhatsApp.');}
+  });}
  });
 }
 function finishNews(){closeModal();$('#productos').scrollIntoView({behavior:'smooth'});}
 function showNews(){if(document.body.classList.contains('locked')||sessionStorage.getItem('dulce_news_seen'))return;const n=(store.news||[]).find(x=>x.active);if(!n)return;const d=Math.max(10,Math.min(20,Number(n.duration)||15));sessionStorage.setItem('dulce_news_seen','yes');
- $('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="feature-news" role="dialog" aria-modal="true" aria-label="Novedad de Dulce"><button class="icon-button" data-close aria-label="Cerrar novedad">✕</button><img src="${h(img(n.image))}" alt="${h(n.title)}"><div class="feature-news-content"><small>${h(n.eyebrow||'NOVEDAD DULCE ✷')}</small><h2>${h(n.title)}</h2><p>${h(n.subtitle)}</p><div class="news-progress"><span style="animation-duration:${d}s"></span></div><button class="btn btn-primary" id="news-explore">Ver productos ↗</button><p class="small-muted">Esta ventana se cierra sola en ${d} segundos.</p></div></div></div>`;document.body.classList.add('locked');$$('[data-close]').forEach(b=>b.addEventListener('click',finishNews));$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')finishNews()});$('#news-explore').addEventListener('click',finishNews);newsTimer=setTimeout(finishNews,d*1000);
+ $('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="feature-news" role="dialog" aria-modal="true" aria-label="Novedad de Dulces"><button class="icon-button" data-close aria-label="Cerrar novedad">✕</button><img src="${h(img(n.image))}" alt="${h(n.title)}"><div class="feature-news-content"><small>${h(n.eyebrow||'NOVEDAD DULCE ✷')}</small><h2>${h(n.title)}</h2><p>${h(n.subtitle)}</p><div class="news-progress"><span style="animation-duration:${d}s"></span></div><button class="btn btn-primary" id="news-explore">Ver productos ↗</button><p class="small-muted">Esta ventana se cierra sola en ${d} segundos.</p></div></div></div>`;document.body.classList.add('locked');$$('[data-close]').forEach(b=>b.addEventListener('click',finishNews));$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')finishNews()});$('#news-explore').addEventListener('click',finishNews);newsTimer=setTimeout(finishNews,d*1000);
 }
 function setupScrollReveals(){
  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
