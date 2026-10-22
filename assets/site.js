@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.5.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.6.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -55,16 +55,10 @@ function updateCount(){const n=cart.reduce((x,item)=>x+item.qty,0);$('#cart-coun
 // Desayuno a medida: solo usa los campos PUBLICADOS; no lee costos privados.
 const customId='dulces-custom-breakfast';
 const selectedBuilder=new Map();
-let builderSearch='', builderGroup='todos', builderShowSoldOut=false, builderVisibleCount=6;
+let builderSearch='', builderGroup='todos', builderVisibleCount=6;
 const builderGroups=[['todos','Todos'],['bebidas','Bebidas'],['panificados','Panificados'],['dulces','Dulces'],['salados','Salados'],['otros','Otros']];
-function builderGroupOf(item){
- const t=String(item.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
- if(/jugo|bebida|licuado|cafe|te\b|infusion|yerba|mate|chocolatada|leche|agua|taza|vaso|termo/.test(t))return 'bebidas';
- if(/medialuna|factura|croissant|pan\b|tostada|grisines|bizcocho|chip[aá]/.test(t))return 'panificados';
- if(/chocotorta|brownie|alfajor|budin|tarta|ricota|galleta|cookie|masita|dulce|mermelada|chocolate|miel|torta/.test(t))return 'dulces';
- if(/fiambre|queso|jamon|salame|sandwich|sanguch|picada|aceituna/.test(t))return 'salados';
- return 'otros';
-}
+// El grupo se elige y guarda desde el administrador; no se deduce del nombre.
+function builderGroupOf(item){return builderGroups.some(([id])=>id===item.builderCategory)?item.builderCategory:'otros';}
 
 function publishedBuilder(){return (store.builderItems||[]).filter(x=>x && x.id && x.name && Number.isFinite(Number(x.price)) && Number(x.price)>=0)}
 const illustrationKeys=new Set(['taza','jugo','medialuna','chocotorta','brownie','alfajor','budin','tartaleta','sandwich','fruta','fiambres','queso','pan','galletitas','mate','yogur','miel','regalo']);
@@ -93,11 +87,10 @@ function renderBuilder(){
    const active=el.dataset.builderGroup===builderGroup;
    el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));
   });
-  const sw=controls.querySelector('#builder-soldout');if(sw)sw.checked=builderShowSoldOut;
  }
  const normalized=(s)=>String(s||'').toLocaleLowerCase('es-AR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  const sorted=[...items].sort((a,b)=>Number(b.inStock===true)-Number(a.inStock===true)||String(a.name).localeCompare(String(b.name),'es-AR'));
- const results=sorted.filter(i=>(builderShowSoldOut||i.inStock===true)&&(builderGroup==='todos'||builderGroupOf(i)===builderGroup)&&normalized(i.name).includes(normalized(builderSearch)));
+ const results=sorted.filter(i=>i.inStock===true&&(builderGroup==='todos'||builderGroupOf(i)===builderGroup)&&normalized(i.name).includes(normalized(builderSearch)));
  grid.innerHTML=results.length?results.slice(0,builderVisibleCount).map(builderChoiceHTML).join(''):'<div class="builder-empty"><strong>No encontramos componentes con esos filtros.</strong><p>Probá con otra categoría o cambiá la búsqueda.</p><button class="builder-reset" type="button" id="builder-reset-filters">Ver todos los disponibles</button></div>';
  const match=$('#builder-match-count');if(match)match.textContent=`Mostrando ${Math.min(results.length,builderVisibleCount)} de ${results.length} componentes`;
  const more=$('#builder-more');if(more){more.hidden=results.length<=builderVisibleCount;more.textContent=`Ver más componentes (${results.length-builderVisibleCount}) ↓`;}
@@ -107,7 +100,7 @@ function renderBuilder(){
  $('#builder-total-price').textContent=money(total);$('#builder-add').disabled=!chosen.length||total<=0;
 }
 
-function resetBuilderFilters(){builderSearch='';builderGroup='todos';builderShowSoldOut=false;builderVisibleCount=6;const inp=$('#builder-search');if(inp)inp.value='';renderBuilder();}
+function resetBuilderFilters(){builderSearch='';builderGroup='todos';builderVisibleCount=6;const inp=$('#builder-search');if(inp)inp.value='';renderBuilder();}
 function addBuilderBreakfast(){
  const items=publishedBuilder().filter(i=>i.inStock && (selectedBuilder.get(i.id)||0)>0);
  if(!items.length)return toast('Elegí al menos un componente disponible.');
@@ -245,7 +238,6 @@ function setup(){
   if(e.target.closest('#builder-reset-filters'))resetBuilderFilters();
  });
  bControls.querySelector('#builder-search').addEventListener('input',e=>{builderSearch=e.target.value;builderVisibleCount=6;renderBuilder()});
- bControls.querySelector('#builder-soldout').addEventListener('change',e=>{builderShowSoldOut=e.target.checked;builderVisibleCount=6;renderBuilder()});
  $('#builder-products').addEventListener('click',e=>{if(e.target.closest('#builder-reset-filters'))resetBuilderFilters()});
  $('#builder-more').addEventListener('click',()=>{builderVisibleCount+=6;renderBuilder()});
  $('#builder-add').addEventListener('click',addBuilderBreakfast);

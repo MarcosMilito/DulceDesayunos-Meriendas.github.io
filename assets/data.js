@@ -1,6 +1,26 @@
 export const formatMoney = (n=0) => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);
 export const escapeHtml = (value='') => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const slug = () => (globalThis.crypto?.randomUUID?.()||`id${Date.now()}${Math.random().toString(36).slice(2)}`);
+// Categorías editables del personalizador. Solo se publican nombre, precio y stock, nunca costos.
+export const builderCategories = [
+ {id:'bebidas',name:'Bebidas'}, {id:'panificados',name:'Panificados'},
+ {id:'dulces',name:'Dulces'}, {id:'salados',name:'Salados'}, {id:'otros',name:'Otros'}
+];
+export function validBuilderCategory(value){return builderCategories.some(c=>c.id===value)?value:'otros'}
+// Para los datos ya guardados sin categoría: sugerimos un valor inicial UNA SOLA VEZ.
+// En adelante la categoría la selecciona el administrador y se guarda explícitamente.
+export function legacyBuilderCategory(name){
+ const n=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(/jugo|bebida|licuado|cafe|infusion|mate|te\b|taza|vaso|yogur|leche/.test(n))return 'bebidas';
+ if(/medialuna|pan\b|tostad|grisines|factura|budin salado|bizcoch/.test(n))return 'panificados';
+ if(/chocotorta|brownie|alfajor|budin|tarta|ricota|gallet|cookie|masita|chocolate|miel|mermelada|dulce/.test(n))return 'dulces';
+ if(/fiambre|queso|jamon|salame|sandwich|sanguch|picada|aceituna/.test(n))return 'salados';
+ return 'otros';
+}
+export function normalizePrivateCategories(data){
+ if(!data||!Array.isArray(data.ingredients))return data;
+ return {...data,ingredients:data.ingredients.map(i=>({...i,builderCategory:i.builderCategory?validBuilderCategory(i.builderCategory):legacyBuilderCategory(i.name)}))};
+}
 export const zonePrices = [['Lomas de Zamora', 0], ['Banfield', 0], ['Villa Centenario', 2000], ['Temperley', 2000], ['Remedios de Escalada', 2000], ['Ingeniero Budge', 2500], ['Villa Fiorito', 2500], ['San José', 2500], ['Turdera', 2500], ['Llavallol', 2500], ['Lanús', 3000], ['Adrogué', 3000], ['Luis Guillón', 3500], ['Burzaco', 4000], ['Gerli', 4000], ['Avellaneda', 4500], ['Monte Grande', 4500], ['Almirante Brown', 4800], ['El Jagüel', 4800]];
 export const zoneNames = zonePrices.map(([name])=>name);
 export const defaults = {
@@ -14,7 +34,7 @@ export const defaults = {
       {id:'chocotorta',name:'Chocotorta',category:'desayunos',price:24000,description:'El gusto más tentador: chocotorta, masas, medialuna, tartaleta, jugo y más.',image:'assets/img/chocotorta.jpeg',badge:'Amor al chocolate',featured:false,customizable:true,alsoMerienda:true,active:true},
       {id:'premium',name:'Premium',category:'desayunos',price:30000,description:'Una experiencia especial con sándwiches, medialunas, brownies, fruta fresca, jugo y dulces.',image:'assets/img/premium.jpeg',badge:'Para sorprender',featured:true,customizable:true,alsoMerienda:true,active:true}
     ],
-    builderItems: [], // Solo insumos publicados: id, nombre, unidad, precio y disponibilidad. Nunca costos.
+    builderItems: [], // Solo componentes publicados: id, nombre, categoría, unidad, precio y disponibilidad. Nunca costos.
     promos: [],
     news:[{id:'bienvenida',title:'¡Los momentos lindos se comparten!',subtitle:'Desayunos, meriendas y picadas hechas para sorprender. Elegí tu favorito y armemos algo especial.',image:'assets/img/premium.jpeg',active:true,duration:15,eyebrow:'Una dulce novedad'}],
     shipping:zonePrices.map(([name,price])=>({name,price,enabled:true})),
@@ -53,6 +73,11 @@ export function upgradePublic(store){
    }));
   }
   next.brandVersion=5;
+ }
+ // Migración no destructiva: conserva el filtro previo de componentes cargados,
+ // y permite modificarlo manualmente desde el administrador en cualquier momento.
+ if(Array.isArray(next.builderItems)){
+  next.builderItems=next.builderItems.map(i=>({...i,builderCategory:i.builderCategory?validBuilderCategory(i.builderCategory):legacyBuilderCategory(i.name)}));
  }
  return next;
 }
@@ -96,10 +121,10 @@ export async function loadPublic(){
  return rows?.[0]?.payload && Object.keys(rows[0].payload).length ? upgradePublic(rows[0].payload) : initialPublic();
 }
 export async function loadPrivate(){
- if(!cloud())return localGet(KEY_A,initialPrivate);
+ if(!cloud())return normalizePrivateCategories(localGet(KEY_A,initialPrivate));
  const tok=await sessionToken();if(!tok)throw Error('Tenés que iniciar sesión.');
  const rows=await request('/rest/v1/private_data?select=payload&id=eq.store',{token:tok});
- return rows?.[0]?.payload && Object.keys(rows[0].payload).length ? rows[0].payload : initialPrivate();
+ return normalizePrivateCategories(rows?.[0]?.payload && Object.keys(rows[0].payload).length ? rows[0].payload : initialPrivate());
 }
 export async function savePublic(data){
  if(!cloud())return localSet(KEY_P,data);

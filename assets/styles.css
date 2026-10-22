@@ -1445,3 +1445,15 @@ body.locked .social-dock{pointer-events:none;opacity:0}
  .site-body .builder-stepper .builder-increase{min-width:80px!important}
  .site-body .social-dock .social-link{width:31px;height:31px}
 }
+
+/* 3.6: stock en Vista general y categorías explícitas, también en el modal de productos. */
+.stock-summary {display:flex;align-items:center;gap:12px;background:var(--surface-soft,rgba(209,116,130,.08));padding:14px 18px;border-radius:14px;margin-top:12px}
+.stock-summary strong {font-size:26px;color:var(--accent, #cc6975)}
+.stock-out-list {margin-top:10px;display:grid;gap:8px}
+.stock-out-row {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--border,rgba(100,50,60,.12));border-radius:12px;flex-wrap:wrap}
+.stock-out-row .admin-button {white-space:nowrap}
+.builder-product-settings {padding:15px;border:1px solid var(--line,#eacfd2);border-radius:15px;margin:8px 0 15px;display:grid;gap:12px;background:var(--card,#fff8f5)}
+.builder-product-settings .form-row {align-items:end}
+.builder-product-settings .form-row .form-field {min-width:0}
+body[data-theme="dark"] .builder-product-settings,html[data-theme="dark"] .builder-product-settings {background:#362933;border-color:#6d5360}
+@media(max-width:590px){.stock-out-row{align-items:center}.builder-product-settings .form-row{display:grid;grid-template-columns:1fr}}
