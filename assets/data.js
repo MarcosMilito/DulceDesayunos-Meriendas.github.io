@@ -1,11 +1,11 @@
 export const formatMoney = (n=0) => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);
 export const escapeHtml = (value='') => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const slug = () => (globalThis.crypto?.randomUUID?.()||`id${Date.now()}${Math.random().toString(36).slice(2)}`);
-export const zonePrices = [['Lomas de Zamora', 0], ['Banfield centro', 0], ['Villa Centenario', 2000], ['Temperley', 2000], ['Remedios de Escalada', 2000], ['Ingeniero Budge', 2500], ['Villa Fiorito', 2500], ['San José', 2500], ['Turdera', 2500], ['Llavallol', 2500], ['Lanús', 3000], ['Adrogué', 3000], ['Luis Guillón', 3500], ['Burzaco', 4000], ['Gerli', 4000], ['Avellaneda', 4500], ['Monte Grande', 4500], ['Almirante Brown', 4800], ['El Jagüel', 4800]];
+export const zonePrices = [['Lomas de Zamora', 0], ['Banfield', 0], ['Villa Centenario', 2000], ['Temperley', 2000], ['Remedios de Escalada', 2000], ['Ingeniero Budge', 2500], ['Villa Fiorito', 2500], ['San José', 2500], ['Turdera', 2500], ['Llavallol', 2500], ['Lanús', 3000], ['Adrogué', 3000], ['Luis Guillón', 3500], ['Burzaco', 4000], ['Gerli', 4000], ['Avellaneda', 4500], ['Monte Grande', 4500], ['Almirante Brown', 4800], ['El Jagüel', 4800]];
 export const zoneNames = zonePrices.map(([name])=>name);
 export const defaults = {
   public: {
-    brandVersion: 4,
+    brandVersion: 5,
     products: [
       {id:'picada',name:'Picada',category:'picadas',price:26000,description:'Una selección para compartir: fiambres, quesos, aceitunas, tomates cherry, panes y mucho sabor.',image:'assets/img/picada.jpeg',badge:'Para compartir',featured:true,customizable:false,alsoMerienda:false,active:true},
       {id:'ricota',name:'Ricota',category:'desayunos',price:25000,description:'Una bandeja dulce con medialunas, budín, tartaletas, galletitas, jugo e infusión.',image:'assets/img/ricota.jpeg',badge:'Bien dulce',featured:false,customizable:true,alsoMerienda:true,active:true},
@@ -43,6 +43,16 @@ export function upgradePublic(store){
  if(Number(next.brandVersion||0)<4){
   next.settings = {...(next.settings||{}),businessName:'Dulces Desayunos y Meriendas'};
   next.brandVersion = 4;
+ }
+ // Corregir únicamente el nombre anterior, sin reemplazar precios ni localidades.
+ if(Number(next.brandVersion||0)<5){
+  if(Array.isArray(next.shipping)){
+   const already=next.shipping.some(z=>String(z.name||'').trim().toLowerCase()==='banfield');
+   next.shipping=next.shipping.filter(z=>!already||String(z.name||'').trim().toLowerCase()!=='banfield centro').map(z=>({
+    ...z,name:!already && String(z.name||'').trim().toLowerCase()==='banfield centro'?'Banfield':z.name
+   }));
+  }
+  next.brandVersion=5;
  }
  return next;
 }

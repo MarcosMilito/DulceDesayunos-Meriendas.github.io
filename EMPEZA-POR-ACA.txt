@@ -1,11 +1,9 @@
-DULCES DESAYUNOS Y MERIENDAS · ACTUALIZACIÓN 2.3
+DULCES DESAYUNOS Y MERIENDAS — VERSIÓN 3.5
 
-Si ya tenés la versión 2.2 publicada, utilizá el ZIP de SOLO ARCHIVOS MODIFICADOS.
-Leé la GUIA-ACTUALIZACION.md antes de subir los archivos a GitHub.
+Si ya tenés publicada la versión 3.4:
+1) Bajá el ZIP de ARCHIVOS MODIFICADOS, no el completo.
+2) Reemplazá los seis archivos indicados en GUIA-ACTUALIZACION-3.5.md.
+3) Conservá tu config.js original y tus datos de Supabase.
+4) Esperá el despliegue de Vercel y recargá la web.
 
-NO REEMPLACES config.js, no borres productos y no reinicialices Supabase.
-
-Cambios: nombre corregido, productos sin numeración en WhatsApp,
-observaciones de la dedicatoria y opción de compartir foto + resumen en celulares compatibles.
-
-IMPORTANTE: el comprador siempre debe revisar y confirmar el envío desde WhatsApp.
+No es necesario ejecutar SQL nuevo.

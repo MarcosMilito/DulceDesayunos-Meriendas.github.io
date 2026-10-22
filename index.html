@@ -6,8 +6,8 @@
   <title>Dulces Desayunos y Meriendas | Regalos para compartir</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,40,1;9..144,700,40,1&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.png"><link rel="stylesheet" href="assets/styles.css?v=3.4.0">
-  <script src="assets/theme.js?v=2.6.0"></script><script src="config.js"></script><script type="module" src="assets/site.js?v=3.2.0"></script>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.png"><link rel="stylesheet" href="assets/styles.css?v=3.5.0">
+  <script src="assets/theme.js?v=2.6.0"></script><script src="config.js"></script><script type="module" src="assets/site.js?v=3.5.0"></script>
 </head>
 <body class="site-body">
   <div class="announcement"><span>✷</span> Hecho con amor, para regalar momentos que se disfrutan <span>✷</span></div>
@@ -36,7 +36,20 @@
     </div></section>
     <section class="section builder-section" id="personaliza" aria-labelledby="builder-title"><div class="shell">
  <div class="section-heading"><div><div class="kicker">CREADO POR VOS, PREPARADO CON AMOR ♡</div><h2 id="builder-title">Armá tu desayuno <em>a tu gusto.</em></h2></div><p>Elegí lo que va en tu bandeja. Sumá componentes y conocé el precio antes de pedir.</p></div>
- <div class="builder-layout"><div class="builder-choice"><div class="builder-top-note"><span class="builder-icon">✿</span><div><strong>Elegí tus favoritos</strong><p>Sumá o quitá ingredientes con + y −. Los agotados se identifican claramente.</p></div></div><div class="builder-list-legend"><span><i class="stock-dot"></i> Disponible</span><span><i class="stock-dot soldout"></i> Sin stock</span></div><div id="builder-products" class="builder-grid"></div></div>
+ <div class="builder-layout"><div class="builder-choice"><div class="builder-top-note"><span class="builder-icon">✿</span><div><strong>Elegí tus favoritos</strong><p>Sumá o quitá ingredientes con + y −. Los agotados se identifican claramente.</p></div></div><div id="builder-controls" class="builder-controls">
+ <label class="builder-search-field"><span aria-hidden="true">⌕</span><input id="builder-search" type="search" autocomplete="off" placeholder="Buscar algo rico..." aria-label="Buscar componentes"></label>
+ <div class="builder-group-tabs" role="group" aria-label="Categorías de componentes">
+  <button type="button" data-builder-group="todos" class="active" aria-pressed="true">Todos</button>
+  <button type="button" data-builder-group="bebidas" aria-pressed="false">Bebidas</button>
+  <button type="button" data-builder-group="panificados" aria-pressed="false">Panificados</button>
+  <button type="button" data-builder-group="dulces" aria-pressed="false">Dulces</button>
+  <button type="button" data-builder-group="salados" aria-pressed="false">Salados</button>
+  <button type="button" data-builder-group="otros" aria-pressed="false">Otros</button>
+ </div>
+ <div class="builder-tools"><span id="builder-available-count">Cargando opciones…</span><label><input type="checkbox" id="builder-soldout"> Ver agotados</label></div>
+ </div>
+ <div id="builder-products" class="builder-grid"></div>
+ <div class="builder-pagination"><span id="builder-match-count" aria-live="polite"></span><button type="button" id="builder-more" hidden>Ver más componentes ↓</button></div></div>
  <aside class="builder-tray" aria-label="Resumen del desayuno personalizado"><div class="builder-tray-symbol" aria-hidden="true">♡</div><div class="kicker">TU CREACIÓN</div><h3>Mi desayuno personalizado</h3><p class="builder-tray-caption">Elegí tus favoritos y nosotros preparamos tu desayuno con cariño.</p><div id="builder-selections" class="builder-selections"></div><div class="builder-total"><span>Total de la bandeja</span><strong id="builder-total-price">$ 0</strong></div><button id="builder-add" class="btn btn-primary btn-full" type="button" disabled>Agregar al pedido ♡</button><p class="builder-disclaimer">La disponibilidad y entrega se confirman por WhatsApp. Los componentes son orientativos y están sujetos a confirmación.</p></aside></div>
  </div></section>
  <section class="section" id="promociones"><div class="shell"><div class="section-heading"><div><div class="kicker">OPORTUNIDADES PARA DISFRUTAR</div><h2>Promos que <em>enamoran.</em></h2></div><p>Las novedades y ofertas especiales aparecen acá.</p></div><div id="promos-grid" class="promo-grid"></div></div></section>
