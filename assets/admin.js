@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,builderCategories,validBuilderCategory,legacyBuilderCategory,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.6.0';
+import {formatMoney as money,escapeHtml as h,slug,isCloud,getSession,verifyAdmin,signIn,endSession,loadPublic,loadPrivate,savePublic,savePrivate,initialPublic,initialPrivate,recipeCost,builderCategories,validBuilderCategory,legacyBuilderCategory,sessionToken,loadCustomerOrders,updateCustomerOrderPayment,deleteCustomerOrder} from './data.js?v=3.7.0';
 let pub=initialPublic(),priv=initialPrivate(),page='inicio',demo=!isCloud(),saving=false,customerOrders=[],ordersError='';
 const $=(s,root=document)=>root.querySelector(s), $$=(s,root=document)=>[...root.querySelectorAll(s)];
 const pageInfo={inicio:['Vista general','Un resumen fácil de entender de tu negocio.'],productos:['Mis productos','Fotos, descripciones, precios y componentes de cada bandeja.'],insumos:['Materias primas','Administrá los costos, precios al cliente y disponibilidad para armar desayunos.'],promos:['Promociones','Creá ofertas sin cambiar el precio de lista.'],novedades:['Novedades','Elegí qué se muestra al abrir la tienda.'],pedidos:['Pedidos','Consultá los pedidos y controlá quién pagó.'],envios:['Envíos','Asigná un valor de envío a cada localidad.'],ajustes:['Mi negocio','Tus datos de contacto y copias de seguridad.']};
@@ -8,7 +8,30 @@ const builderCategorySelect=(selected='otros')=>`<label class="form-field"><span
 let showOutOfStock=false;
 let toastTimer;
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3600)}
-function error(t){toast('⚠ '+t)}
+function friendlyError(message){
+ const text=String(message||'');
+ if(/row.level security|permission denied|not authorized|not allowed|\b42501\b|\b403\b/i.test(text))
+  return 'Tu cuenta no tiene permiso para guardar este cambio. Revisá que esté autorizada como administradora (guía de permisos 3.7).';
+ if(/jwt expired|invalid jwt|token.*expired|sesión.*venc/i.test(text))
+  return 'Tu sesión venció. Salí del administrador y volvé a iniciar sesión.';
+ return text;
+}
+function error(t){
+ const message=friendlyError(t);
+ toast('⚠ '+message);
+ // Un error de guardado debe permanecer visible, no desaparecer con el aviso temporal.
+ const card=document.querySelector('#admin-modal-root .modal-card');
+ if(card){
+  let alert=card.querySelector('.save-error-alert');
+  if(!alert){
+   alert=document.createElement('div');
+   alert.className='error-box save-error-alert';
+   alert.setAttribute('role','alert');
+   (card.querySelector('.modal-top')||card).insertAdjacentElement('afterend',alert);
+  }
+  alert.textContent=message;
+ }
+}
 const opts=(items,getValue=x=>x.id,getLabel=x=>x.name,selected='')=>items.map(x=>`<option value="${h(getValue(x))}" ${String(getValue(x))===String(selected)?'selected':''}>${h(getLabel(x))}</option>`).join('');
 const tdEmpty=(n,message)=>`<tr><td class="empty-cell" colspan="${n}">${h(message)}</td></tr>`;
 function closeModal(){const root=$('#admin-modal-root');root.innerHTML='';document.body.classList.remove('locked')}
@@ -16,7 +39,7 @@ function modal(html,{large=false}={}){$('#admin-modal-root').innerHTML=`<div cla
 const modalHead=(label,title)=>`<div class="modal-top"><div><small>${h(label)}</small><h2>${h(title)}</h2></div><button class="icon-button" data-close>✕</button></div>`;
 const field=(label,name,value='',type='text',extra='')=>`<label class="form-field"><span>${h(label)}</span><input name="${h(name)}" value="${h(value)}" type="${type}" ${extra}></label>`;
 const note=(text)=>`<div class="admin-tip"><span>✦</span><div>${text}</div></div>`;
-async function persist(kind){try{saving=true; if(kind==='public')await savePublic(pub);else await savePrivate(priv);toast('Guardado correctamente ♡');return true}catch(e){error('No se pudo guardar: '+e.message);return false}finally{saving=false}}
+async function persist(kind){try{saving=true; if(kind==='public')await savePublic(pub);else await savePrivate(priv);toast('Cambios guardados en la tienda ♡');return true}catch(e){console.error('Fallo al guardar en Supabase:',e);error('No se guardaron los cambios: '+e.message);return false}finally{saving=false}}
 function cleanMoney(v){const n=Number(v);return Number.isFinite(n)?Math.max(0,n):0}
 async function refreshCustomerOrders(){
  try{customerOrders=await loadCustomerOrders();ordersError='';}
@@ -129,7 +152,7 @@ function routeAction(e){const t=e.target.closest('[data-action],[data-go],#save-
 async function imageFileToJpeg(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1200/Math.max(im.width,im.height));const canvas=document.createElement('canvas');canvas.width=Math.round(im.width*scale);canvas.height=Math.round(im.height*scale);canvas.getContext('2d').drawImage(im,0,0,canvas.width,canvas.height);canvas.toBlob(blob=>blob?resolve(blob):reject(Error('No se pudo procesar la imagen')),'image/jpeg',.82)};im.onerror=()=>reject(Error('La imagen no se puede abrir'));im.src=reader.result};reader.readAsDataURL(file)})}
 async function uploadPicture(blob){if(!isCloud())return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});
  const c=window.DULCE_CONFIG,token=await sessionToken(),fileName=`producto-${slug()}.jpg`;
- const response=await fetch(`${c.supabaseUrl.replace(/\/$/,'')}/storage/v1/object/product-images/${fileName}`,{method:'POST',headers:{apikey:c.supabaseAnonKey,Authorization:`Bearer ${token}`,'Content-Type':'image/jpeg','x-upsert':'true'},body:blob});if(!response.ok){const data=await response.json().catch(()=>null);throw Error(data?.message||'No se pudo subir la imagen. Revisá las políticas de Storage.')};return `${c.supabaseUrl.replace(/\/$/,'')}/storage/v1/object/public/product-images/${fileName}`;
+ const response=await fetch(`${c.supabaseUrl.replace(/\/$/,'')}/storage/v1/object/product-images/${fileName}`,{method:'POST',headers:{apikey:c.supabaseAnonKey,Authorization:`Bearer ${token}`,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});if(!response.ok){const data=await response.json().catch(()=>null);throw Error('No se pudo subir la foto: '+(data?.message||'revisá los permisos de imágenes en Supabase.'))};return `${c.supabaseUrl.replace(/\/$/,'')}/storage/v1/object/public/product-images/${fileName}`;
 }
 function editProduct(id){const p=pub.products.find(x=>x.id===id)||{name:'',description:'',category:'desayunos',price:'',image:'',badge:'',active:true,featured:false,customizable:true,alsoMerienda:false};
  modal(`${modalHead('MI CATÁLOGO',id?'Editar producto':'Agregar producto')}<form id="product-form"><div class="modal-body"><div class="form-row">${field('Nombre del producto *','name',p.name,'text','required maxlength="65"')}${field('Precio de venta ($) *','price',p.price,'number','min="0" step="1" required')}</div><label class="form-field"><span>Categoría del catálogo (Desayunos, Meriendas o Picadas)</span><select name="category">${['desayunos','meriendas','picadas'].map(c=>`<option value="${c}" ${p.category===c?'selected':''}>${h(categoryNames[c])}</option>`).join('')}</select></label><div class="builder-product-settings"><label class="switch-row"><input type="checkbox" name="showInBuilder" ${p.showInBuilder?'checked':''}> Ofrecer también este producto como componente de «Personalizar»</label><div class="form-row">${builderCategorySelect(p.builderCategory||'otros')}<label class="form-field"><span>Disponibilidad en «Personalizar»</span><label class="switch-row"><input type="checkbox" name="inStockForBuilder" ${p.inStockForBuilder!==false?'checked':''}> En stock</label></label></div><small class="form-help">Opcional: solo si querés vender este producto dentro de una bandeja armada por el cliente. Se utilizará su precio de venta actual.</small></div><label class="form-field"><span>Descripción para tus clientes</span><textarea maxlength="600" name="description" required>${h(p.description)}</textarea></label><label class="form-field"><span>Qué incluye la bandeja (un componente por renglón)</span><textarea name="contents" maxlength="1200" placeholder="2 medialunas

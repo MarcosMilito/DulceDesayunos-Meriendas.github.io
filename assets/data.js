@@ -126,15 +126,27 @@ export async function loadPrivate(){
  const rows=await request('/rest/v1/private_data?select=payload&id=eq.store',{token:tok});
  return normalizePrivateCategories(rows?.[0]?.payload && Object.keys(rows[0].payload).length ? rows[0].payload : initialPrivate());
 }
+// Guardado comprobable: antes el PATCH podía afectar 0 filas sin informar error.
+// El UPSERT crea la fila inicial si faltara, y solo funciona con RLS de administradores.
+async function saveStoreRow(table,payload){
+ const tok=await sessionToken();
+ if(!tok)throw Error('Tu sesión venció. Volvé a iniciar sesión.');
+ const saved=await request(`/rest/v1/${table}?on_conflict=id&select=id`,{
+  method:'POST',token:tok,body:{id:'store',payload,updated_at:new Date().toISOString()},
+  extraHeaders:{Prefer:'resolution=merge-duplicates,return=representation'}
+ });
+ if(!Array.isArray(saved)||saved.length!==1||saved[0].id!=='store'){
+  throw Error('No se pudo confirmar el guardado en el servidor. Volvé a intentarlo.');
+ }
+ return true;
+}
 export async function savePublic(data){
  if(!cloud())return localSet(KEY_P,data);
- const tok=await sessionToken();if(!tok)throw Error('Se cerró tu sesión.');
- await request('/rest/v1/public_data?id=eq.store',{method:'PATCH',body:{payload:data,updated_at:new Date().toISOString()},token:tok,extraHeaders:{Prefer:'return=minimal'}});
+ return saveStoreRow('public_data',data);
 }
 export async function savePrivate(data){
  if(!cloud())return localSet(KEY_A,data);
- const tok=await sessionToken();if(!tok)throw Error('Se cerró tu sesión.');
- await request('/rest/v1/private_data?id=eq.store',{method:'PATCH',body:{payload:data,updated_at:new Date().toISOString()},token:tok,extraHeaders:{Prefer:'return=minimal'}});
+ return saveStoreRow('private_data',data);
 }
 // Pedidos: la solicitud desde la tienda NO implica pago ni confirmación por WhatsApp.
 // En la nube, solamente administradores pueden leer o cambiar estados (políticas RLS del SQL 02).
