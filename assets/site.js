@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.8.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.9.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -60,14 +60,36 @@ const builderGroups=[['todos','Todos'],['bebidas','Bebidas'],['panificados','Pan
 // El grupo se elige y guarda desde el administrador; no se deduce del nombre.
 function builderGroupOf(item){return builderGroups.some(([id])=>id===item.builderCategory)?item.builderCategory:'otros';}
 
-function publishedBuilder(){return (store.builderItems||[]).filter(x=>x && x.id && x.name && Number.isFinite(Number(x.price)) && Number(x.price)>=0)}
-const illustrationKeys=new Set(['taza','jugo','medialuna','chocotorta','brownie','alfajor','budin','tartaleta','sandwich','fruta','fiambres','queso','pan','galletitas','mate','yogur','miel','regalo']);
+// Personalizar tiene UNA fuente: materias primas publicadas por el administrador.
+// Exclusión defensiva de productos completos de versiones anteriores.
+function publishedBuilder(){
+ return (store.builderItems||[]).filter(x=>x && x.id && x.name
+  && !String(x.id).startsWith('producto:') && !x.productId && x.source!=='product'
+  && Number.isFinite(Number(x.price)) && Number(x.price)>=0);
+}
+const illustrationKeys=new Set(['taza','jugo','medialuna','chocotorta','brownie','alfajor','budin','tartaleta','sandwich','fruta','fiambres','queso','pan','galletitas','mate','yogur','miel','cerveza','lata','bebida','panificados','dulces','salados','otros']);
 function builderIllustration(item){
- const selected=String(item.illustration||'').toLowerCase();
- if(illustrationKeys.has(selected))return selected;
+ const category=String(item.builderCategory||'otros').toLowerCase();
  const name=String(item.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
- const groups=[['chocotorta',/chocotorta|choco.?torta/],['jugo',/jugo|botell|bebida|naranja|licuado/],['medialuna',/medialuna|croissant|factura/],['taza',/taza|cafe|infusion|chocolatada/],['brownie',/brownie|brownie|cuadrado de chocolate/],['alfajor',/alfajor/],['tartaleta',/tarta|ricota|lemon pie|pastafrola|pastafrolla/],['budin',/budin|bizcochuelo|torta|muffin|cupcake/],['sandwich',/sandwich|sanguche|sanguch|miga/],['fruta',/fruta|ensalada|manzana|banana/],['fiambres',/fiambre|salame|jamon|picada|chorizo/],['queso',/queso/],['pan',/pan|tostada|grisines/],['galletitas',/gallet|masita|cookie/],['mate',/mate|yerba/],['yogur',/yogur/],['miel',/miel|mermelada|dulce de leche/]];
- return groups.find(([,re])=>re.test(name))?.[0]||'regalo';
+ // Solamente usamos una ilustración específica cuando el nombre permite identificar el producto.
+ const explicit=[
+  ['cerveza',/cerveza|corona|quilmes|heineken/],
+  ['lata',/sprite|coca.?cola|gaseosa|lata de (?:sprite|coca|pepsi)|pepsi/],
+  ['chocotorta',/chocotorta|choco.?torta/],['jugo',/jugo|botella de jugo|exprimido|licuado/],
+  ['medialuna',/medialuna|croissant/],['taza',/taza|cafe|infusion/],
+  ['brownie',/brownie/],['alfajor',/alfajor/],
+  ['tartaleta',/tartaleta|pastafrola|pastafrolla|torta de ricota/],
+  ['budin',/budin|muffin|bizcochuelo/],['sandwich',/sandwich|sanguche|sanguch/],
+  ['fruta',/fruta|ensalada de frutas/],['fiambres',/fiambre|salame|jamon|picada/],
+  ['queso',/queso/],['pan',/\bpan\b|tostada|grisines/],
+  ['galletitas',/gallet|masita|cookie/],['mate',/mate|yerba/],
+  ['yogur',/yogur/],['miel',/miel|mermelada|dulce de leche/]
+ ];
+ const matched=explicit.find(([,expression])=>expression.test(name));
+ if(matched)return matched[0];
+ // Si no sabemos qué producto es, mostramos la categoría y NO un regalo inventado.
+ const categoryIcons={bebidas:'bebida',panificados:'panificados',dulces:'dulces',salados:'salados',otros:'otros'};
+ return categoryIcons[category]||'otros';
 }
 function builderImage(i){return `assets/illustrations/${builderIllustration(i)}.svg`}
 // Los límites se publican sin exponer los costos internos.
