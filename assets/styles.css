@@ -1484,3 +1484,30 @@ body[data-theme="dark"] .builder-product-settings,html[data-theme="dark"] .build
 html[data-theme="dark"] .builder-sync-row,body.dark .builder-sync-row{background:#322630;border-color:#604751;color:#fff0ef;}
 html[data-theme="dark"] .builder-sync-row p,body.dark .builder-sync-row p{color:#e3cdd4;}
 @media(max-width:720px){.builder-sync-row{flex-direction:column;align-items:stretch;padding:15px;gap:14px}.builder-sync-row .admin-button{width:100%;white-space:normal;}}
+
+/* V4.0: cálculo de envío en Mi pedido, antes de los datos de entrega. */
+.site-body .cart-shipping-choice{padding:0 0 15px;margin-bottom:13px;border-bottom:1px solid var(--line)}
+.site-body .cart-shipping-choice label{display:block;font-size:15px;line-height:1.4;font-weight:800;color:var(--ink);margin-bottom:8px}
+.site-body .cart-shipping-choice select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:10px 36px 10px 12px;font-family:inherit;font-size:16px;color:var(--ink);background:var(--surface,#fffaf6)}
+.site-body .cart-shipping-choice small{display:block;margin-top:6px;font-size:12px;color:var(--muted)}
+.site-body .cart-totals{display:grid;gap:11px;margin-bottom:14px}
+.site-body .cart-price-line{display:flex;align-items:baseline;justify-content:space-between;gap:14px;line-height:1.45;color:var(--ink);font-size:15px}
+.site-body .cart-price-line span{min-width:0}
+.site-body .cart-price-line strong{font-size:16px;text-align:right;white-space:nowrap;color:var(--ink)}
+.site-body .cart-price-grand{border-top:1px solid var(--line);padding-top:12px;font-size:17px;font-weight:800}
+.site-body .cart-price-grand strong{font:700 24px var(--serif);color:var(--coral)}
+.site-body .checkout-delivery-note{border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:16px;color:var(--ink);background:var(--surface,#fffaf6);font-size:15px;line-height:1.5}
+.site-body .checkout-delivery-note span{display:block;font-size:12px;margin-top:5px;color:var(--muted)}
+.site-body .checkout-prices{margin:14px 0;display:grid;gap:10px}
+:root[data-theme="dark"] .site-body .cart-shipping-choice select,
+:root[data-theme="dark"] .site-body .checkout-delivery-note{background:#342932;color:#f8eaf0;border-color:#6a4e60}
+:root[data-theme="dark"] .site-body .cart-shipping-choice label,
+:root[data-theme="dark"] .site-body .cart-price-line,
+:root[data-theme="dark"] .site-body .cart-price-line strong{color:#f8eaf0}
+:root[data-theme="dark"] .site-body .cart-price-grand strong{color:#ffc0c8}
+@media(max-width:550px){
+ .site-body .cart-footer{padding:16px 18px}
+ .site-body .cart-shipping-choice label{font-size:14px}
+ .site-body .cart-price-line{font-size:14px}
+ .site-body .cart-price-grand strong{font-size:22px}
+}

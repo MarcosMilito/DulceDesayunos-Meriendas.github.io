@@ -1,4 +1,4 @@
-import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=3.9.0';
+import {formatMoney as money,escapeHtml as h,loadPublic,initialPublic,isCloud,getCart,setCart,productPrice,promoFor,slug,createCustomerOrder} from './data.js?v=4.0.0';
 let store=initialPublic(), filter='todos', cart=getCart(), modalCloser=null, newsTimer=null;
 // Datos del formulario conservados al regresar. Identificador único para evitar pedidos duplicados.
 let checkoutDraft={},checkoutOrderId=null,orderAlreadySaved=false;
@@ -51,6 +51,16 @@ function renderContact(){
 function itemCost(item){return Math.max(0,Number(item.unitPrice)||0)+(item.extras||[]).reduce((sum,e)=>sum+(Number(e.price)||0),0)}
 function cartSum(){return cart.reduce((sum,item)=>sum+itemCost(item)*item.qty,0)}
 function cartNeedsQuote(){return cart.some(item=>(item.extras||[]).some(e=>e.price===null||e.price===undefined))}
+// La localidad se elige una sola vez, en Mi pedido, y se conserva para el checkout.
+function availableZones(){return (store.shipping||[]).filter(z=>z && z.enabled!==false && String(z.name||'').trim())}
+function selectedZone(){return availableZones().find(z=>z.name===checkoutDraft.locality)}
+function shippingCost(zone){return zone?.price==null?null:Math.max(0,Number(zone.price)||0)}
+function shippingDescription(zone){if(!zone)return 'Elegí tu localidad';const amount=shippingCost(zone);return amount===null?'A confirmar':amount===0?'Sin cargo':money(amount)}
+function checkDeliveryZone(){
+ const zone=selectedZone();
+ if(!zone){toast('Seleccioná una localidad de entrega en Mi pedido para continuar.');return null;}
+ return zone;
+}
 function updateCount(){const n=cart.reduce((x,item)=>x+item.qty,0);$('#cart-count').textContent=n;$('#mobile-count').textContent=n}
 // Desayuno a medida: solo usa los campos PUBLICADOS; no lee costos privados.
 const customId='dulces-custom-breakfast';
@@ -154,9 +164,29 @@ function add(pId,{extras=[],message=''}={}){const p=pById(pId);if(!p)return;cons
 function cartItemsHTML(){return cart.map((item,i)=>{const p=pById(item.id);return `<div class="cart-row"><img src="${h(img(p?.image|| (item.id===customId?"assets/illustrations/regalo.svg":null)))}" alt=""><div class="cart-details"><h4>${h(p?.name||item.name||'Producto')}</h4>${item.components?.length?`<small>${h(item.components.map(c=>`${c.name} × ${c.quantity}`).join(' · '))}</small>`:''}${item.extras?.length?`<small>${h(item.extras.map(e=>e.name).join(' · '))}</small>`:''}${item.message?`<small> · Dedicatoria: ${h(item.message)}</small>`:''}<strong>${money(itemCost(item)*item.qty)}${(item.extras||[]).some(e=>e.price==null)?' + extras a cotizar':''}</strong><div class="qty-controls"><button data-qty="${i}" data-delta="-1" aria-label="Quitar una unidad">−</button><span>${item.qty}</span><button data-qty="${i}" data-delta="1" aria-label="Agregar una unidad">+</button><button class="text-link" data-remove="${i}">Eliminar</button></div></div></div>`}).join('')}
 function renderCart(){
  $('#cart-items').innerHTML=cart.length?cartItemsHTML():`<div class="cart-empty"><span>♡</span><h3>Tu pedido te está esperando</h3><p>Agregá algo rico y empezamos.</p><button class="btn btn-primary" id="explore-cart">Ver productos</button></div>`;
- $('#cart-summary').innerHTML=cart.length?`<div class="total-line"><span>Subtotal <small>(sin envío)</small></span><strong>${money(cartSum())}</strong></div>${cartNeedsQuote()?'<p class="small-muted">Hay extras a cotizar. El total definitivo se confirma por WhatsApp.</p>':''}`:'';
- $('#start-checkout').disabled=!cart.length;
+ const zones=availableZones();
+ const zone=selectedZone();
+ const subtotal=cartSum();
+ const delivery=shippingCost(zone);
+ const shippingOptions=zones.map(z=>`<option value="${h(z.name)}"${zone?.name===z.name?' selected':''}>${h(z.name)}</option>`).join('');
+ $('#cart-summary').innerHTML=cart.length?`
+  <div class="cart-shipping-choice">
+   <label for="cart-locality">¿A qué localidad enviamos tu pedido?</label>
+   <select id="cart-locality" name="locality" required aria-describedby="cart-locality-help">
+    <option value="">Seleccioná tu localidad…</option>${shippingOptions}
+   </select>
+   <small id="cart-locality-help">Calculamos el envío antes de continuar.</small>
+  </div>
+  <div class="cart-totals" aria-live="polite">
+   <div class="cart-price-line"><span>Subtotal de productos</span><strong>${money(subtotal)}</strong></div>
+   <div class="cart-price-line"><span>Envío${zone?` a ${h(zone.name)}`:''}</span><strong>${shippingDescription(zone)}</strong></div>
+   <div class="cart-price-line cart-price-grand"><span>Total estimado</span><strong>${!zone?'—':delivery===null?'A confirmar':money(subtotal+delivery)}</strong></div>
+  </div>${cartNeedsQuote()?'<p class="small-muted">Hay extras a cotizar. El total definitivo se confirma por WhatsApp.</p>':''}`:'';
+ const checkoutButton=$('#start-checkout');
+ checkoutButton.disabled=!cart.length||!zone;
+ checkoutButton.title=cart.length&&!zone?'Elegí primero la localidad de entrega':'';
 }
+
 function drawer(open){$('#cart-drawer').classList.toggle('open',open);$('#cart-drawer').setAttribute('aria-hidden',String(!open));$('#overlay').classList.toggle('hidden',!open);document.body.classList.toggle('locked',open)}
 function closeModal(){const el=$('#modal-root');el.innerHTML='';document.body.classList.remove('locked');clearTimeout(newsTimer);modalCloser=null}
 function modal(html,opts={}){drawer(false);$('#modal-root').innerHTML=`<div class="modal-wrap" id="modal-overlay"><div class="modal-card ${opts.large?'large':''}" role="dialog" aria-modal="true" aria-label="${h(opts.label||'Detalle')}">${html}</div></div>`;document.body.classList.add('locked');$('#modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal()});$$('[data-close]').forEach(el=>el.addEventListener('click',closeModal));$('#modal-root [data-modal-back]')?.addEventListener('click',opts.onBack||closeModal);modalCloser=opts.onBack||closeModal;}
@@ -167,7 +197,7 @@ async function beginCheckout(){
  if(!cart.length)return;
  if(isCloud()){try{store=await loadPublic();renderBuilder()}catch(e){return toast('No pudimos comprobar el stock actual. Revisá tu conexión y volvé a intentar.')}}
  const issue=cartStockIssue();if(issue)return toast(issue);
- const zones=(store.shipping||[]).filter(z=>z.enabled!==false);
+ const zone=checkDeliveryZone();if(!zone){drawer(true);return;}
  modal(`${head('UN PASITO MÁS ♡','Datos para tu pedido')}
  <form id="checkout-form"><div class="modal-body">
   <p class="checkout-intro">Completá los datos de entrega y, si querés, sumá una dedicatoria especial.</p>
@@ -176,32 +206,30 @@ async function beginCheckout(){
    <label class="form-field"><span>Tu número de WhatsApp *</span><input name="phone" required inputmode="tel" maxlength="35" placeholder="Ej.: 11 1234 5678"></label>
   </div>
   <label class="form-field"><span>Dirección de entrega *</span><input name="address" required maxlength="180" autocomplete="street-address" placeholder="Calle, número, piso / departamento"></label>
-  <label class="form-field"><span>Localidad *</span><select name="locality" id="checkout-locality" required><option value="">Seleccioná tu localidad…</option>${zones.map(z=>`<option value="${h(z.name)}">${h(z.name)}</option>`).join('')}</select></label>
-  <div id="shipping-preview" class="price-note" aria-live="polite">Seleccioná una localidad para ver el costo del envío.</div>
+  <div class="checkout-delivery-note">Envío a <strong>${h(zone.name)}</strong> · ${shippingDescription(zone)} <span>La localidad se eligió en Mi pedido.</span></div>
   <div class="gift-options"><div class="gift-options-heading"><span class="gift-heart" aria-hidden="true">♡</span><div><strong>Hacé tu regalo más especial</strong><small>Opcional · preparado con cariño</small></div></div>
    <label class="form-field" for="checkout-dedication"><span>Dedicatoria para imprimir (opcional)</span><textarea id="checkout-dedication" name="dedication" maxlength="600" rows="4" placeholder="Escribí acá el mensaje que querés que imprimamos…"></textarea></label>
    <div class="dedication-help"><span>La imprimimos tal como la escribas.</span><span id="dedication-count">0 / 600</span></div>
    <label class="form-field dedication-observations" for="checkout-dedication-notes"><span>Observaciones de la dedicatoria (opcional)</span><textarea id="checkout-dedication-notes" name="dedicationNotes" maxlength="450" rows="3" placeholder="¿Tenés alguna preferencia especial? Colores, tipo de letra, diseño de la tarjeta…"></textarea><small>Contanos cómo querés que preparemos la tarjeta.</small></label>
   </div>
-  <div class="total-line"><span>Productos <small>${cart.reduce((x,i)=>x+i.qty,0)} unidad/es</small></span><strong>${money(cartSum())}</strong></div>
-  <p class="small-muted">El importe final y la disponibilidad se confirman por WhatsApp.</p>
+  <div class="checkout-prices">
+   <div class="cart-price-line"><span>Subtotal de productos</span><strong>${money(cartSum())}</strong></div>
+   <div class="cart-price-line"><span>Envío</span><strong>${shippingDescription(zone)}</strong></div>
+   <div class="cart-price-line cart-price-grand"><span>Total estimado</span><strong>${shippingCost(zone)===null?'A confirmar':money(cartSum()+shippingCost(zone))}</strong></div>
+  </div>
+  <p class="small-muted">La disponibilidad y el importe definitivo se confirman por WhatsApp.</p>
  </div><div class="modal-foot step-actions"><button class="btn btn-soft" type="button" id="checkout-back">← Volver al carrito</button><button class="btn btn-primary" type="submit">Revisar pedido →</button></div></form>`,{large:true,label:'Datos para tu pedido',onBack:()=>{closeModal();drawer(true)}});
  const form=$('#checkout-form');
  // Los valores se preservan al volver desde el resumen, sin perder la dedicatoria.
- for(const key of ['name','phone','address','locality','dedication','dedicationNotes']){
+ for(const key of ['name','phone','address','dedication','dedicationNotes']){
   if(checkoutDraft[key]!==undefined && form.elements.namedItem(key))form.elements.namedItem(key).value=checkoutDraft[key];
  }
- function previewShipping(){
-  const z=zones.find(x=>x.name===$('#checkout-locality').value);
-  $('#shipping-preview').textContent=z?(z.price==null?`Envío a ${z.name}: a confirmar.`:z.price===0?`Envío a ${z.name}: GRATIS · Total estimado: ${money(cartSum())}`:`Envío a ${z.name}: ${money(z.price)} · Total estimado: ${money(cartSum()+Number(z.price))}`):'Seleccioná una localidad para ver el costo del envío.';
- }
- const saveDraft=()=>{const fields=new FormData(form);const before=JSON.stringify(checkoutDraft);for(const key of ['name','phone','address','locality','dedication','dedicationNotes'])checkoutDraft[key]=String(fields.get(key)||'');if(before!==JSON.stringify(checkoutDraft)){checkoutOrderId=null;orderAlreadySaved=false;}};
+ const saveDraft=()=>{const fields=new FormData(form);const before=JSON.stringify(checkoutDraft);for(const key of ['name','phone','address','dedication','dedicationNotes'])checkoutDraft[key]=String(fields.get(key)||'');if(before!==JSON.stringify(checkoutDraft)){checkoutOrderId=null;orderAlreadySaved=false;}};
  form.addEventListener('input',()=>{saveDraft();$('#dedication-count').textContent=`${$('#checkout-dedication').value.length} / 600`});
  form.addEventListener('change',saveDraft);
- $('#checkout-locality').addEventListener('change',previewShipping);
  $('#checkout-back').addEventListener('click',()=>{saveDraft();closeModal();drawer(true)});
- form.addEventListener('submit',e=>{e.preventDefault();saveDraft();if(!zones.some(z=>z.name===checkoutDraft.locality)){toast('Seleccioná una localidad válida.');return;}reviewOrder()});
- previewShipping();$('#dedication-count').textContent=`${(checkoutDraft.dedication||'').length} / 600`;
+ form.addEventListener('submit',e=>{e.preventDefault();saveDraft();if(!selectedZone()){toast('La localidad seleccionada ya no está disponible. Volvé al carrito para elegir otra.');return;}reviewOrder()});
+ $('#dedication-count').textContent=`${(checkoutDraft.dedication||'').length} / 600`;
 }
 // Paso 2. Mensaje a WhatsApp. Todos los campos de la dedicatoria se muestran,
 // incluso si se dejaron vacíos, para que el negocio sepa que no faltan datos.
@@ -219,6 +247,7 @@ function buildOrderMessage(){
  return `¡Hola! Quisiera realizar el siguiente pedido en *Dulces Desayunos y Meriendas*:\n\n*PRODUCTOS*\n${lines}\n\n*RESUMEN DE IMPORTES*\nSubtotal: ${money(cartSum())}\nEnvío: ${z.price==null?'A confirmar':z.price===0?'Sin cargo':money(z.price)}\n${z.price!=null?`Total estimado: ${money(cartSum()+Number(z.price))}\n`:''}${cartNeedsQuote()?'Algunos adicionales requieren cotización.\n':''}\n*DATOS PARA LA ENTREGA*\nNombre: ${o.name}\nWhatsApp: ${o.phone}\nDirección: ${o.address}\nLocalidad: ${o.locality}\n\n*DEDICATORIA PARA IMPRIMIR*\n${dedication||'No se solicitó dedicatoria.'}\n\n*OBSERVACIONES DE LA DEDICATORIA*\n${notes||'Sin observaciones especiales.'}\n\nMuchas gracias. Quedo a la espera de la confirmación del pedido.`;
 }
 function reviewOrder(){
+ if(!selectedZone()){toast('Volvé a Mi pedido para elegir una localidad disponible.');drawer(true);return;}
  const message=buildOrderMessage();
  const phone=(store.settings?.whatsapp||'5491165744539').replace(/\D/g,'');
  const giftPreview=`<div class="gift-review"><div><strong>♡ Dedicatoria para imprimir</strong><p>${h((checkoutDraft.dedication||'').trim()||'No se solicitó dedicatoria.')}</p></div><div><strong>✎ Observaciones de la dedicatoria</strong><p>${h((checkoutDraft.dedicationNotes||'').trim()||'Sin observaciones especiales.')}</p></div></div>`;
@@ -242,8 +271,16 @@ function reviewOrder(){
   }
   const stockIssue=cartStockIssue();
   if(stockIssue){btn.disabled=false;btn.textContent='Compartir pedido ↗';return toast(stockIssue+' Modificá tu pedido para continuar.');}
+  const zone=selectedZone();
+  if(!zone){btn.disabled=false;btn.textContent='Compartir pedido ↗';closeModal();drawer(true);renderCart();return toast('La localidad seleccionada ya no está disponible. Elegí otra para continuar.');}
+  // Si cambiaron las tarifas desde el administrador, el cliente debe revisar el nuevo importe.
+  const updatedMessage=buildOrderMessage();
+  if(updatedMessage!==$('#order-message').value){
+   btn.disabled=false;btn.textContent='Compartir pedido ↗';
+   checkoutOrderId=null;orderAlreadySaved=false;reviewOrder();
+   return toast('Se actualizaron los importes. Revisá el resumen antes de compartir.');
+  }
   const id=checkoutOrderId ||= slug();
-  const zone=(store.shipping||[]).find(x=>x.name===checkoutDraft.locality);
   const subtotal=cartSum(),shipping=zone?.price==null?null:Number(zone.price);
   const request={
    id,customer_name:checkoutDraft.name.trim(),customer_phone:checkoutDraft.phone.trim(),
@@ -279,6 +316,13 @@ function setupScrollReveals(){
 function setup(){
  $('#open-cart').addEventListener('click',()=>drawer(true));$('#mobile-cart').addEventListener('click',()=>drawer(true));$('#close-cart').addEventListener('click',()=>drawer(false));$('#cart-back').addEventListener('click',()=>drawer(false));$('#overlay').addEventListener('click',()=>drawer(false));
  $('#start-checkout').addEventListener('click',beginCheckout);
+ $('#cart-summary').addEventListener('change',e=>{
+  if(e.target.id!=='cart-locality')return;
+  const next=e.target.value;
+  checkoutDraft.locality=availableZones().some(z=>z.name===next)?next:'';
+  checkoutOrderId=null;orderAlreadySaved=false;
+  renderCart();
+ });
  $('#builder-products').addEventListener('click',e=>{const b=e.target.closest('[data-builder-step]');if(!b||b.disabled)return;const item=publishedBuilder().find(i=>i.id===b.dataset.builderStep);if(!item)return;const {enabled,max,left}=builderAvailability(item);if(!enabled)return toast(`${item.name} no está disponible.`);const selected=selectedBuilder.get(item.id)||0,delta=Number(b.dataset.delta||0);if(delta>0&&selected>=max)return toast(`La capacidad máxima de ${item.name} en un desayuno es ${max}.`);if(delta>0&&selected>=left)return toast(`Solo quedan ${left} unidades de ${item.name} disponibles.`);const next=Math.max(0,Math.min(max,left,selected+delta));if(next)selectedBuilder.set(item.id,next);else selectedBuilder.delete(item.id);renderBuilder()});
  const bControls=$('#builder-controls');
  bControls.addEventListener('click',e=>{
